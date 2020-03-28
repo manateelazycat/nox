@@ -906,13 +906,7 @@ This docstring appeases checkdoc, that's all."
                             (hack-dir-local-variables-non-file-buffer)
                             (run-hook-with-args 'nox-connect-hook server)
                             (run-hook-with-args 'nox-server-initialized-hook server))
-                          (nox--message
-                           "Connected! Server `%s' now managing `%s' buffers \
-in project `%s'."
-                           (or (plist-get serverInfo :name)
-                               (jsonrpc-name server))
-                           managed-major-mode
-                           (nox-project-nickname server))
+                          (nox--message "Connected server with project: %s" (nox-project-nickname server))
                           (when tag (throw tag t))))
                       :timeout nox-connect-timeout
                       :error-fn (nox--lambda ((ResponseError) code message)
@@ -933,8 +927,7 @@ in project `%s'."
                             (while t (accept-process-output nil 30)))))))
               (pcase retval
                 (`(error . ,msg) (nox--error msg))
-                (`nil (nox--message "Waiting in background for server `%s'"
-                                    (jsonrpc-name server))
+                (`nil (nox--message "Waiting in background for server %s" (jsonrpc-name server))
                       nil)
                 (_ server)))
           (quit (jsonrpc-shutdown server) (setq cancelled 'quit)))
@@ -1386,9 +1379,7 @@ COMMAND is a symbol naming the command."
 (cl-defmethod nox-handle-notification
   (_server (_method (eql window/showMessage)) &key type message)
   "Handle notification window/showMessage"
-  (nox--message (propertize "Server reports (type=%s): %s"
-                            'face (if (<= type 1) 'error))
-                type message))
+  (nox--message (propertize "Server reports (type=%s): %s" 'face (if (<= type 1) 'error)) type message))
 
 (cl-defmethod nox-handle-request
   (_server (_method (eql window/showMessageRequest)) &key type message actions)
@@ -2075,7 +2066,7 @@ influence of C1 on the result."
          server :textDocument/signatureHelp position-params
          :success-fn
          (nox--lambda ((SignatureHelp)
-                   signatures activeSignature activeParameter)
+                       signatures activeSignature activeParameter)
            (when-buffer-window
             (when (cl-plusp (length signatures))
               (setq sig-showing t)
