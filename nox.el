@@ -248,8 +248,8 @@ under cursor."
            (const :tag "Execute custom commands" :executeCommandProvider)
            (symbol :tag "Other"))))
 
-(defcustom nox-doc-tooltip-font "WenQuanYi Micro Hei Mono-14"
-  "The font name of tooltip."
+(defcustom nox-doc-tooltip-font-size "14"
+  "The font size of documentation tooltip."
   :type 'string)
 
 (defcustom nox-doc-tooltip-border-width 15
@@ -2039,7 +2039,7 @@ influence of C1 on the result."
     (posframe-show
      nox-doc-tooltip-name
      :string string
-     :font nox-doc-tooltip-font
+     :font (format "%s-%s" (frame-parameter nil 'font-parameter) nox-doc-tooltip-font-size)
      :position (point)
      :timeout nox-doc-tooltip-timeout
      :background-color background-color
