@@ -14,6 +14,10 @@ My favorite a word from Nox:
 
 ```Maybe one day you will learn, that your way is not the only way -- Anteaus```
 
+# Install dependences
+
+Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [posframe](https://github.com/tumashu/posframe) 
+
 # Install
 
 1. Clone this repository and put nox.el in your load-path
