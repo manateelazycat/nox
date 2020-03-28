@@ -1,6 +1,8 @@
 # Nox
 
-Nox is LSP client that fork from [eglot](https://github.com/joaotavora/eglot), remove flymake, use posframe instead eldoc and many other enhancements.
+Nox is LSP client that fork from [eglot](https://github.com/joaotavora/eglot), to encode fluency, removed a lot of features that affect performance, such as real-time syntax checking.
+
+And add many other enhancements, such as use posframe instead eldoc show help documentation.
 
 # Install
 
@@ -33,25 +35,25 @@ Nox is LSP client that fork from [eglot](https://github.com/joaotavora/eglot), r
 
 `M-x nox` can guess and work out-of-the-box with these servers:
 
-* Javascript's [javascript-typescript-stdio][javascript-typescript-langserver]
-* Rust's [rls][rls]
-* Python's [pyls][pyls]
-* Ruby's [solargraph][solargraph]
-* Java's [Eclipse JDT Language Server][eclipse-jdt]
-* Bash's [bash-language-server][bash-language-server]
-* PHP's [php-language-server][php-language-server]
-* C/C++'s [ccls][ccls]  ([cquery][cquery] and [clangd][clangd] also work)
-* Haskell's [IDE engine][haskell-ide-engine]
-* Elm's [elm-language-server][elm-language-server]
-* Kotlin's [kotlin-language-server][kotlin-language-server]
-* Go's [gopls][gopls]
-* Ocaml's [ocaml-language-server][ocaml-language-server]
-* R's [languageserver][r-languageserver]
-* Dart's [dart_language_server][dart_language_server]
-* Elixir's [elixir-ls][elixir-ls]
-* Ada's [ada_language_server][ada_language_server]
-* Scala's [metals][metals]
-* TeX/LaTeX's [Digestif][digestif]
+* Javascript: javascript-typescript-stdio
+* Rust: rls
+* Python: pyls
+* Ruby: solargraph
+* Java: eclipse-jdt
+* Bash: bash-language-server
+* PHP: php-language-server
+* C/C++: ccls
+* Haskell: haskell-ide-engine
+* Elm: elm-language-server
+* Kotlin: kotlin-language-server
+* Go: gopls
+* Ocaml: ocaml-language-server
+* R: languageserver
+* Dart: dart_language_server
+* Elixir: elixir-ls
+* Ada: ada_language_server
+* Scala: metals
+* TeX/LaTeX: digestif
 
 I'll add to this list as I test more servers. In the meantime you can
 customize `nox-server-programs`:
