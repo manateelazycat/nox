@@ -167,7 +167,7 @@ Having trouble connecting to a server?  Expected to have a certain
 capability supported by it (e.g. completion) but nothing happens?  Or
 do you get spurious and annoying errors in an otherwise smooth
 operation?  We may have help, so open a [new
-issue](https://github.com/joaotavora/nox/issues) and try to be as
+issue](https://github.com/manateelazycat/nox/issues) and try to be as
 precise and objective about the problem as you can:
 
 1. Try to replicate the problem with **as clean an Emacs run as
