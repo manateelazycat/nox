@@ -108,33 +108,26 @@
   :prefix "nox-"
   :group 'applications)
 
-(defvar nox-server-programs '((rust-mode . (nox-rls "rls"))
-                              (python-mode . ("pyls"))
-                              ((js-mode
-                                typescript-mode)
-                               . ("javascript-typescript-stdio"))
-                              (sh-mode . ("bash-language-server" "start"))
-                              (php-mode . ("php" "vendor/felixfbecker/\
-language-server/bin/php-language-server.php"))
-                              ((c++-mode c-mode) . ("ccls"))
-                              ((caml-mode tuareg-mode reason-mode)
-                               . ("ocaml-language-server" "--stdio"))
-                              (ruby-mode
-                               . ("solargraph" "socket" "--port"
-                                  :autoport))
-                              (haskell-mode . ("hie-wrapper"))
-                              (elm-mode . ("elm-language-server"))
-                              (kotlin-mode . ("kotlin-language-server"))
-                              (go-mode . ("gopls"))
-                              ((R-mode ess-r-mode) . ("R" "--slave" "-e"
-                                                      "languageserver::run()"))
-                              (java-mode . nox--eclipse-jdt-contact)
-                              (dart-mode . ("dart_language_server"))
-                              (elixir-mode . ("language_server.sh"))
-                              (ada-mode . ("ada_language_server"))
-                              (scala-mode . ("metals-emacs"))
-                              ((tex-mode context-mode texinfo-mode bibtex-mode)
-                               . ("digestif")))
+(defvar nox-server-programs
+  '((rust-mode . (nox-rls "rls"))
+    (python-mode . ("pyls"))
+    ((js-mode typescript-mode) . ("javascript-typescript-stdio"))
+    (sh-mode . ("bash-language-server" "start"))
+    (php-mode . ("php" "vendor/felixfbecker/anguage-server/bin/php-language-server.php"))
+    ((c++-mode c-mode) . ("ccls"))
+    ((caml-mode tuareg-mode reason-mode) . ("ocaml-language-server" "--stdio"))
+    (ruby-mode . ("solargraph" "socket" "--port" :autoport))
+    (haskell-mode . ("hie-wrapper"))
+    (elm-mode . ("elm-language-server"))
+    (kotlin-mode . ("kotlin-language-server"))
+    (go-mode . ("gopls"))
+    ((R-mode ess-r-mode) . ("R" "--slave" "-e" "languageserver::run()"))
+    (java-mode . nox--eclipse-jdt-contact)
+    (dart-mode . ("dart_language_server"))
+    (elixir-mode . ("language_server.sh"))
+    (ada-mode . ("ada_language_server"))
+    (scala-mode . ("metals-emacs"))
+    ((tex-mode context-mode texinfo-mode bibtex-mode) . ("digestif")))
   "How the command `nox' guesses the server to start.
 An association list of (MAJOR-MODE . CONTACT) pairs.  MAJOR-MODE
 is a mode symbol, or a list of mode symbols.  The associated
