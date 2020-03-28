@@ -282,14 +282,13 @@ under cursor."
     (24 . "Event") (25 . "Operator") (26 . "TypeParameter")))
 
 (defconst nox--kind-names
-  `((1 . "Text") (2 . "Method") (3 . "Fn") (4 . "Constructor")
-    (5 . "Field") (6 . "Var") (7 . "Class") (8 . "Interface")
-    (9 . "Module") (10 . "Property") (11 . "Unit") (12 . "Value")
-    (13 . "Enum") (14 . "Keyword") (15 . "Snippet") (16 . "Color")
-    (17 . "File") (18 . "Reference")))
+  `((1 . "Text") (2 . "Method") (3 . "Fn") (4 . "Ctor")
+    (5 . "Field") (6 . "Var") (7 . "Class") (8 . "I/F")
+    (9 . "Mod") (10 . "Prop") (11 . "Unit") (12 . "Value")
+    (13 . "Enum") (14 . "K/W") (15 . "Sn") (16 . "Color")
+    (17 . "File") (18 . "Refer")))
 
 (defconst nox--{} (make-hash-table) "The empty JSON object.")
-
 
 ;;; Message verification helpers
 ;;;
@@ -890,7 +889,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                                (apply fn server method (append params nil)))))
+                            (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1539,16 +1538,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                            (when nox--managed-mode
-                              (nox--signal-textDocument/didChange)
-                              (setq nox--change-idle-timer nil))))))))
+                        (when nox--managed-mode
+                          (nox--signal-textDocument/didChange)
+                          (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                        deferred &allow-other-keys)
+                                    deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1839,7 +1838,9 @@ is not active."
                                         (or (get-text-property 0 :sortText a) "")
                                         (or (get-text-property 0 :sortText b) ""))))))
            (metadata `(metadata . ((display-sort-function . ,sort-completions))))
-           resp items (cached-proxies :none)
+           resp
+           items
+           (cached-proxies :none)
            (proxies
             (lambda ()
               (if (listp cached-proxies) cached-proxies
@@ -1855,19 +1856,9 @@ is not active."
                 (setq cached-proxies
                       (mapcar
                        (jsonrpc-lambda
-                           (&rest item &key label insertText filterText insertTextFormat
+                           (&rest item &key label kind insertText filterText
                                   &allow-other-keys)
-                         (let ((proxy
-                                (cond
-                                 ;; In C++, we will use filterText instead label, avoid too long candidate
-                                 ((and filterText
-                                       (< (length filterText) (length label)))
-                                  (string-trim-left filterText))
-                                 ((and insertText
-                                       (not (string-empty-p insertText)))
-                                  insertText)
-                                 (t
-                                  (string-trim-left label)))))
+                         (let ((proxy (nox--build-candidate-text kind label insertText filterText)))
                            (unless (zerop (length item))
                              (put-text-property 0 1 'nox--lsp-item item proxy))
                            proxy))
@@ -1893,7 +1884,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)             ; test-completion
+          ((eq action 'lambda)                 ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -1918,9 +1909,8 @@ is not active."
                   (annotation-length (length annotation))
                   (kind-name (cdr (assoc kind nox--kind-names))))
              (when annotation
-               (concat "    ["
+               (format " [%s] %s"
                        kind-name
-                       "] "
                        (propertize
                         (if (> annotation-length nox-candidate-annotation-limit)
                             (concat (substring annotation 0 nox-candidate-annotation-limit) " ...")
@@ -1952,6 +1942,18 @@ is not active."
          ;; Just send didChange request to server after finish completion.
          (nox--signal-textDocument/didChange)
          )))))
+
+(defun nox--build-candidate-text (kind label insertText filterText)
+  (cond
+   ;; In C++, we will use filterText instead label, avoid too long candidate
+   ((and filterText
+         (< (length filterText) (length label)))
+    (string-trim-left filterText))
+   ((and insertText
+         (not (string-empty-p insertText)))
+    insertText)
+   (t
+    (string-trim-left label))))
 
 (defun nox--hover-info (contents &optional range)
   (let ((heading (and range (pcase-let ((`(,beg . ,end) (nox--range-region range)))
