@@ -503,7 +503,7 @@ treated as in `nox-dbind'."
                                :willSave t :willSaveWaitUntil t :didSave t)
              :completion      (list :dynamicRegistration :json-false
                                     :completionItem
-                                    `(:snippetSupport nil)
+                                    `(:snippetSupport t)
                                     :contextSupport t)
              :hover              (list :dynamicRegistration :json-false
                                        :contentFormat ["markdown" "plaintext"])
@@ -840,7 +840,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                                (apply fn server method (append params nil)))))
+                            (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1549,16 +1549,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                            (when nox--managed-mode
-                              (nox--signal-textDocument/didChange)
-                              (setq nox--change-idle-timer nil))))))))
+                        (when nox--managed-mode
+                          (nox--signal-textDocument/didChange)
+                          (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                        deferred &allow-other-keys)
+                                    deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
