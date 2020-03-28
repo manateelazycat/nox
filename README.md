@@ -229,7 +229,7 @@ Here's a summary of available commands:
 
 - `M-x nox-shutdown` says bye-bye to the server;
 
-- `M-x nox-rename` ask the server to rename the symbol at point;
+- `M-x nox-rename` ask the server to rename the symbol at point, if rename work, please use command `nox-stderr-buffer`, must something rename tool not install, sch as python need `rope` for rename operation;
 
 - `M-x nox-format` asks the server to format buffer or the active
   region;
