@@ -1,6 +1,6 @@
 # Nox
 
-Nox is LSP client for Emacs, code fork from [eglot](https://github.com/joaotavora/eglot).
+Nox is a LSP client for Emacs, code fork from [eglot](https://github.com/joaotavora/eglot).
 
 The project has three goals:
 1. Function: only provide core functions, include code completion, jump definition, code references and rename
