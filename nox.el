@@ -850,7 +850,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                                (apply fn server method (append params nil)))))
+                            (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1428,39 +1428,7 @@ COMMAND is a symbol naming the command."
 (cl-defmethod nox-handle-notification
   (server (_method (eql textDocument/publishDiagnostics)) &key uri diagnostics
           &allow-other-keys) ; FIXME: doesn't respect `nox-strict-mode'
-  "Handle notification publishDiagnostics"
-  (if-let ((buffer (find-buffer-visiting (nox--uri-to-path uri))))
-      (with-current-buffer buffer
-        (cl-loop
-         for diag-spec across diagnostics
-         collect (nox--dbind ((Diagnostic) range message severity source)
-                     diag-spec
-                   (setq message (concat source ": " message))
-                   (pcase-let
-                       ((sev severity)
-                        (`(,beg . ,end) (nox--range-region range)))
-                     ;; botched the range
-                     (when (= beg end)
-                       (if-let* ((st (plist-get range :start))
-                                 (diag-region
-                                  ))
-                           (setq beg (car diag-region) end (cdr diag-region))
-                         (nox--widening
-                          (goto-char (point-min))
-                          (setq beg
-                                (point-at-bol
-                                 (1+ (plist-get (plist-get range :start) :line))))
-                          (setq end
-                                (point-at-eol
-                                 (1+ (plist-get (plist-get range :end) :line)))))))
-                     (nox--make-diag (current-buffer) beg end
-                                     (cond ((<= sev 1) 'nox-error)
-                                           ((= sev 2)  'nox-warning)
-                                           (t          'nox-note))
-                                     message `((nox-lsp-diag . ,diag-spec)))))
-         into diags
-         finally (setq nox--unreported-diagnostics (cons t diags))))
-    (jsonrpc--debug server "Diagnostics received for unvisited %s" uri)))
+  "Handle notification publishDiagnostics")
 
 (cl-defun nox--register-unregister (server things how)
   "Helper for `registerCapability'.
@@ -1594,16 +1562,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                            (when nox--managed-mode
-                              (nox--signal-textDocument/didChange)
-                              (setq nox--change-idle-timer nil))))))))
+                        (when nox--managed-mode
+                          (nox--signal-textDocument/didChange)
+                          (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                        deferred &allow-other-keys)
+                                    deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1946,7 +1914,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)             ; test-completion
+          ((eq action 'lambda)                 ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
