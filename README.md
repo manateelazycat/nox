@@ -6,6 +6,8 @@ Code fork from [eglot](https://github.com/joaotavora/eglot), to achieve the high
 
 And add many other enhancements, such as use posframe instead eldoc show help documentation etc.
 
+<img src="./screenshot.png">
+
 ## Why named Nox?
 
 The Nox are considered to be a member of the Alliance of Four Great Races", along with the Alterans, Asgard, and Furlings.
