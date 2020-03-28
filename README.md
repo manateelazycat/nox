@@ -262,6 +262,16 @@ Here's a quick summary of the customization options.  In Nox's
 customization group (`M-x customize-group`) there is more
 documentation on what these do.
 
+- `nox-doc-tooltip-font`: The font family and font size for documentation tooltip.
+
+- `nox-doc-tooltip-border-width`: The border width of documentation tooltip.
+
+- `nox-doc-tooltip-timeout`: The timeout of documentation tooltip show time, default is 30 seconds, tooltip will hide after you change cursor point.
+
+- `nox-doc-tooltip-name`: The name of documentation tooltip.
+
+- `nox-candidate-annotation-limit`: The width limit of candidate annotation.
+
 - `nox-autoreconnect`: Control ability to reconnect automatically to
   the LSP server;
 

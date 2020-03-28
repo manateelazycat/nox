@@ -218,6 +218,56 @@ let the buffer grow forever."
   :type '(choice (const :tag "Don't show confirmation prompt" nil)
                  (symbol :tag "Show confirmation prompt" 'confirm)))
 
+(defcustom nox-ignored-server-capabilites (list)
+  "LSP server capabilities that Nox could use, but won't.
+You could add, for instance, the symbol
+`:documentHighlightProvider' to prevent automatic highlighting
+under cursor."
+  :type '(repeat
+          (choice
+           (const :tag "Documentation on hover" :hoverProvider)
+           (const :tag "Code completion" :completionProvider)
+           (const :tag "Function signature help" :signatureHelpProvider)
+           (const :tag "Go to definition" :definitionProvider)
+           (const :tag "Go to type definition" :typeDefinitionProvider)
+           (const :tag "Go to implementation" :implementationProvider)
+           (const :tag "Go to declaration" :implementationProvider)
+           (const :tag "Find references" :referencesProvider)
+           (const :tag "Highlight symbols automatically" :documentHighlightProvider)
+           (const :tag "List symbols in buffer" :documentSymbolProvider)
+           (const :tag "List symbols in workspace" :workspaceSymbolProvider)
+           (const :tag "Execute code actions" :codeActionProvider)
+           (const :tag "Code lens" :codeLensProvider)
+           (const :tag "Format buffer" :documentFormattingProvider)
+           (const :tag "Format portion of buffer" :documentRangeFormattingProvider)
+           (const :tag "On-type formatting" :documentOnTypeFormattingProvider)
+           (const :tag "Rename symbol" :renameProvider)
+           (const :tag "Highlight links in document" :documentLinkProvider)
+           (const :tag "Decorate color references" :colorProvider)
+           (const :tag "Fold regions of buffer" :foldingRangeProvider)
+           (const :tag "Execute custom commands" :executeCommandProvider)
+           (symbol :tag "Other"))))
+
+(defcustom nox-doc-tooltip-font "WenQuanYi Micro Hei Mono-14"
+  "The font name of tooltip."
+  :type 'string)
+
+(defcustom nox-doc-tooltip-border-width 15
+  "The border width of nox tooltip, default is 15 px."
+  :type 'integer)
+
+(defcustom nox-doc-tooltip-timeout 30
+  "The timeout of nox tooltip show time, in seconds."
+  :type 'integer)
+
+(defcustom nox-doc-tooltip-name "*nox doc*"
+  "The name of nox tooltip name."
+  :type 'string)
+
+(defcustom nox-candidate-annotation-limit 80
+  "The limit of annotation."
+  :type 'integer)
+
 ;;; Constants
 ;;;
 (defconst nox--symbol-kind-names
@@ -1103,52 +1153,6 @@ If optional MARKER, return a marker instead"
       (font-lock-ensure)
       (buffer-string))))
 
-(defcustom nox-ignored-server-capabilites (list)
-  "LSP server capabilities that Nox could use, but won't.
-You could add, for instance, the symbol
-`:documentHighlightProvider' to prevent automatic highlighting
-under cursor."
-  :type '(repeat
-          (choice
-           (const :tag "Documentation on hover" :hoverProvider)
-           (const :tag "Code completion" :completionProvider)
-           (const :tag "Function signature help" :signatureHelpProvider)
-           (const :tag "Go to definition" :definitionProvider)
-           (const :tag "Go to type definition" :typeDefinitionProvider)
-           (const :tag "Go to implementation" :implementationProvider)
-           (const :tag "Go to declaration" :implementationProvider)
-           (const :tag "Find references" :referencesProvider)
-           (const :tag "Highlight symbols automatically" :documentHighlightProvider)
-           (const :tag "List symbols in buffer" :documentSymbolProvider)
-           (const :tag "List symbols in workspace" :workspaceSymbolProvider)
-           (const :tag "Execute code actions" :codeActionProvider)
-           (const :tag "Code lens" :codeLensProvider)
-           (const :tag "Format buffer" :documentFormattingProvider)
-           (const :tag "Format portion of buffer" :documentRangeFormattingProvider)
-           (const :tag "On-type formatting" :documentOnTypeFormattingProvider)
-           (const :tag "Rename symbol" :renameProvider)
-           (const :tag "Highlight links in document" :documentLinkProvider)
-           (const :tag "Decorate color references" :colorProvider)
-           (const :tag "Fold regions of buffer" :foldingRangeProvider)
-           (const :tag "Execute custom commands" :executeCommandProvider)
-           (symbol :tag "Other"))))
-
-(defcustom nox-tooltip-border-width 15
-  "The border width of nox tooltip, default is 15 px."
-  :type 'integer)
-
-(defcustom nox-tooltip-timeout 30
-  "The timeout of nox tooltip show time, in seconds."
-  :type 'integer)
-
-(defcustom nox-doc-tooltip-name "*nox doc*"
-  "The name of nox tooltip name."
-  :type 'string)
-
-(defcustom nox-annotation-limit 80
-  "The limit of annotation."
-  :type 'integer)
-
 (defun nox--server-capable (&rest feats)
   "Determine if current server is capable of FEATS."
   (unless (cl-some (lambda (feat)
@@ -1918,8 +1922,8 @@ is not active."
                        kind-name
                        "] "
                        (propertize
-                        (if (> annotation-length nox-annotation-limit)
-                            (concat (substring annotation 0 nox-annotation-limit) " ...")
+                        (if (> annotation-length nox-candidate-annotation-limit)
+                            (concat (substring annotation 0 nox-candidate-annotation-limit) " ...")
                           annotation)
                         'face 'font-lock-function-name-face))))))
        :company-doc-buffer
@@ -2035,12 +2039,12 @@ influence of C1 on the result."
     (posframe-show
      nox-doc-tooltip-name
      :string string
-     :font "WenQuanYi Micro Hei Mono-14"
+     :font nox-doc-tooltip-font
      :position (point)
-     :timeout nox-tooltip-timeout
+     :timeout nox-doc-tooltip-timeout
      :background-color background-color
      :foreground-color (face-attribute 'default :foreground)
-     :internal-border-width nox-tooltip-border-width)))
+     :internal-border-width nox-doc-tooltip-border-width)))
 
 (defun nox-show-doc ()
   "Show documentation at point, use by `posframe'."
@@ -2048,8 +2052,7 @@ influence of C1 on the result."
   (let* ((buffer (current-buffer))
          (server (nox--current-server-or-lose))
          (position-params (nox--TextDocumentPositionParams))
-         sig-showing
-         (thing-at-point (thing-at-point 'symbol)))
+         sig-showing)
     (cl-macrolet ((when-buffer-window
                    (&body body) ; notice the exception when testing with `ert'
                    `(when (or (get-buffer-window buffer) (ert-running-test))
@@ -2058,15 +2061,11 @@ influence of C1 on the result."
         (jsonrpc-async-request
          server :textDocument/signatureHelp position-params
          :success-fn
-         (nox--lambda ((SignatureHelp)
-                       signatures activeSignature activeParameter)
+         (nox--lambda ((SignatureHelp) signatures activeSignature activeParameter)
            (when-buffer-window
             (when (cl-plusp (length signatures))
               (setq sig-showing t)
-              (nox--show-doc (nox--sig-info signatures
-                                            activeSignature
-                                            activeParameter)
-                             ))))
+              (nox--show-doc (nox--sig-info signatures activeSignature activeParameter)))))
          :deferred :textDocument/signatureHelp))
       (when (nox--server-capable :hoverProvider)
         (jsonrpc-async-request
