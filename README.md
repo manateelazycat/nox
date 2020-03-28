@@ -1,8 +1,10 @@
 # Nox
 
-Nox is LSP client that fork from [eglot](https://github.com/joaotavora/eglot), to encode fluency, removed a lot of features that affect performance, such as real-time syntax checking.
+Nox is LSP client for Emacs.
 
-And add many other enhancements, such as use posframe instead eldoc show help documentation.
+Code fork from [eglot](https://github.com/joaotavora/eglot), to achieve the highest performance, removed a lot of features, such as code diagnostic, snippet expand.
+
+And add many other enhancements, such as use posframe instead eldoc show help documentation etc.
 
 # Install
 
