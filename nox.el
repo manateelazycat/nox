@@ -889,7 +889,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1538,16 +1538,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1884,7 +1884,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)                 ; test-completion
+          ((eq action 'lambda)             ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -2140,32 +2140,36 @@ influence of C1 on the result."
 (defun nox--apply-workspace-edit (wedit &optional confirm)
   "Apply the workspace edit WEDIT.  If CONFIRM, ask user first."
   (nox--dbind ((WorkspaceEdit) changes documentChanges) wedit
-    (let ((prepared
-           (mapcar (nox--lambda ((TextDocumentEdit) textDocument edits)
-                     (nox--dbind ((VersionedTextDocumentIdentifier) uri version)
-                         textDocument
-                       (list (nox--uri-to-path uri) edits version)))
-                   documentChanges))
-          edit)
-      (cl-loop for (uri edits) on changes by #'cddr
-               do (push (list (nox--uri-to-path uri) edits) prepared))
-      (if (or confirm
-              (cl-notevery #'find-buffer-visiting
-                           (mapcar #'car prepared)))
-          (unless (y-or-n-p
-                   (format "[nox] Server wants to edit:\n  %s\n Proceed? "
-                           (mapconcat #'identity (mapcar #'car prepared) "\n  ")))
-            (nox--error "User cancelled server edit")))
-      (while (setq edit (car prepared))
-        (pcase-let ((`(,path ,edits ,version)  edit))
-          (with-current-buffer (find-file-noselect path)
-            (nox--apply-text-edits edits version))
-          (pop prepared))
-        t)
-      (unwind-protect
-          (if prepared (nox--warn "Caution: edits of files %s failed."
-                                  (mapcar #'car prepared))
-            (nox--message "Edit successful!"))))))
+    (if (or changes
+            documentChanges)
+        (let ((prepared
+               (mapcar (nox--lambda ((TextDocumentEdit) textDocument edits)
+                         (nox--dbind ((VersionedTextDocumentIdentifier) uri version)
+                             textDocument
+                           (list (nox--uri-to-path uri) edits version)))
+                       documentChanges))
+              edit)
+          (cl-loop for (uri edits) on changes by #'cddr
+                   do (push (list (nox--uri-to-path uri) edits) prepared))
+          (if (or confirm
+                  (cl-notevery #'find-buffer-visiting
+                               (mapcar #'car prepared)))
+              (unless (y-or-n-p
+                       (format "[nox] Server wants to edit (y or n): \n  %s\n Proceed? "
+                               (mapconcat #'identity (mapcar #'car prepared) "\n  ")))
+                (nox--error "User cancelled server edit")))
+          (while (setq edit (car prepared))
+            (pcase-let ((`(,path ,edits ,version)  edit))
+              (with-current-buffer (find-file-noselect path)
+                (nox--apply-text-edits edits version))
+              (pop prepared))
+            t)
+          (unwind-protect
+              (if prepared (nox--warn "Caution: edits of files %s failed."
+                                      (mapcar #'car prepared))
+                (nox--message "Edit successful!"))))
+      ;; If respond arguments is nil, something wrong in LSP server.
+      (nox--message "Nothing change, please execute command `nox-stderr-buffer` to check reason!"))))
 
 (defun nox-rename (newname)
   "Rename the current symbol to NEWNAME."
@@ -2358,20 +2362,6 @@ If INTERACTIVE, prompt user for details."
   ((_server nox-eclipse-jdt) (_cmd (eql java.apply.workspaceEdit)) arguments)
   "Eclipse JDT breaks spec and replies with edits as arguments."
   (mapc #'nox--apply-workspace-edit arguments))
-
-(defmacro with-timer (title &rest forms)
-  "Run the given FORMS, counting the elapsed time.
-A message including the given TITLE and the corresponding elapsed
-time is displayed."
-  (declare (indent 1))
-  (let ((nowvar (make-symbol "now"))
-        (body   `(progn ,@forms)))
-    `(let ((,nowvar (current-time)))
-       (message "%s..." ,title)
-       (prog1 ,body
-         (let ((elapsed
-                (float-time (time-subtract (current-time) ,nowvar))))
-           (message "%s... done (%.3fs)" ,title elapsed))))))
 
 (provide 'nox)
 ;;; nox.el ends here
