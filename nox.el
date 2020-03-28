@@ -1271,9 +1271,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (nox--setq-saving xref-prompt-for-identifier nil)
     (nox--setq-saving company-backends '(company-capf))
     (nox--setq-saving company-tooltip-align-annotations t)
-    (unless (nox--stay-out-of-p 'imenu)
-      (add-function :before-until (local 'imenu-create-index-function)
-                    #'nox-imenu))
     (eldoc-mode 1)
     (cl-pushnew (current-buffer) (nox--managed-buffers nox--cached-server)))
    (t
@@ -1293,7 +1290,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (remove-hook 'post-command-hook 'nox-monitor-cursor-change nil)
     (cl-loop for (var . saved-binding) in nox--saved-bindings
              do (set (make-local-variable var) saved-binding))
-    (remove-function (local 'imenu-create-index-function) #'nox-imenu)
     (let ((server nox--cached-server))
       (setq nox--cached-server nil)
       (when server
@@ -2066,7 +2062,7 @@ influence of C1 on the result."
          server :textDocument/signatureHelp position-params
          :success-fn
          (nox--lambda ((SignatureHelp)
-                       signatures activeSignature activeParameter)
+                   signatures activeSignature activeParameter)
            (when-buffer-window
             (when (cl-plusp (length signatures))
               (setq sig-showing t)
@@ -2095,39 +2091,6 @@ influence of C1 on the result."
   (unless (equal (point) nox-last-position)
     (posframe-hide nox-doc-tooltip-name))
   (setq nox-last-position (point)))
-
-(defun nox-imenu ()
-  "NOX's `imenu-create-index-function'."
-  (let ((entries
-         (and
-          (nox--server-capable :documentSymbolProvider)
-          (mapcar
-           (nox--lambda
-               ((SymbolInformation) name kind location containerName)
-             (cons (propertize
-                    name
-                    :kind (alist-get kind nox--symbol-kind-names
-                                     "Unknown")
-                    :containerName (and (stringp containerName)
-                                        (not (string-empty-p containerName))
-                                        containerName))
-                   (nox--lsp-position-to-point
-                    (plist-get (plist-get location :range) :start))))
-           (jsonrpc-request (nox--current-server-or-lose)
-                            :textDocument/documentSymbol
-                            `(:textDocument ,(nox--TextDocumentIdentifier)))))))
-    (mapcar
-     (pcase-lambda (`(,kind . ,syms))
-       (let ((syms-by-scope (seq-group-by
-                             (lambda (e)
-                               (get-text-property 0 :containerName (car e)))
-                             syms)))
-         (cons kind (cl-loop for (scope . elems) in syms-by-scope
-                             append (if scope
-                                        (list (cons scope elems))
-                                      elems)))))
-     (seq-group-by (lambda (e) (get-text-property 0 :kind (car e)))
-                   entries))))
 
 (defun nox--apply-text-edits (edits &optional version)
   "Apply EDITS for current buffer if at VERSION, or if it's nil."
