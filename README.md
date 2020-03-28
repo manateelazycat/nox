@@ -68,6 +68,10 @@ Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [
 * Ada's [ada_language_server][ada_language_server]
 * Scala's [metals][metals]
 * TeX/LaTeX's [Digestif][digestif]
+* Dockerfile's [dockerfile_language_server][dockerfile_language_server]
+* HTML [html_language_server][html_language_server]
+* CSS's [css_language_server][css_language_server]
+* JSON's [json_language_server][json_language_server]
 
 I'll add to this list as I test more servers. In the meantime you can
 customize `nox-server-programs`:
@@ -338,3 +342,7 @@ lisp:
 [flymake]: https://www.gnu.org/software/emacs/manual/html_node/flymake/index.html#Top
 [yasnippet]: http://elpa.gnu.org/packages/yasnippet.html
 [markdown]: https://github.com/defunkt/markdown-mode
+[dockerfile_language_server]: https://github.com/rcjsuen/dockerfile-language-server-nodejs
+[html_language_server]: https://github.com/Microsoft/vscode/tree/master/extensions/html-language-features/server
+[css_language_server]: https://github.com/Microsoft/vscode/tree/master/extensions/css-language-features/server
+[json_language_server]: https://www.npmjs.com/package/vscode-json-languageserver

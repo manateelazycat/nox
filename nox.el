@@ -127,7 +127,11 @@
     (elixir-mode . ("language_server.sh"))
     (ada-mode . ("ada_language_server"))
     (scala-mode . ("metals-emacs"))
-    ((tex-mode context-mode texinfo-mode bibtex-mode) . ("digestif")))
+    ((tex-mode context-mode texinfo-mode bibtex-mode) . ("digestif"))
+    (dockerfile-mode . ("docker-langserver" "--stdio"))
+    (css-mode "css-languageserver" "--stdio")
+    (html-mode "html-languageserver" "--stdio")
+    (json-mode "json-languageserver" "--stdio"))
   "How the command `nox' guesses the server to start.
 An association list of (MAJOR-MODE . CONTACT) pairs.  MAJOR-MODE
 is a mode symbol, or a list of mode symbols.  The associated
@@ -840,7 +844,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1540,16 +1544,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1894,7 +1898,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)                 ; test-completion
+          ((eq action 'lambda)             ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -2066,7 +2070,7 @@ influence of C1 on the result."
          server :textDocument/signatureHelp position-params
          :success-fn
          (nox--lambda ((SignatureHelp)
-                   signatures activeSignature activeParameter)
+                       signatures activeSignature activeParameter)
            (when-buffer-window
             (when (cl-plusp (length signatures))
               (setq sig-showing t)
