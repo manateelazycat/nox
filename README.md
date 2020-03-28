@@ -219,8 +219,7 @@ Here's a summary of available commands:
   variable, or fixing an import. Left click on diagnostics to check if
   there are any there;
 
-- `M-x nox-help-at-point` asks the server for help for symbol at
-  point.
+- `M-x nox-show-doc` show documentation for symbol at point.
 
 - `M-x nox-events-buffer` jumps to the events buffer for debugging
   communication with the server.

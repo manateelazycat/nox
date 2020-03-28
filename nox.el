@@ -788,7 +788,8 @@ INTERACTIVE is t if called interactively."
             (unless nox--managed-mode
               (apply #'nox--connect (nox--guess-contact))))))
       (when buffer-file-name
-        (add-hook 'post-command-hook #'maybe-connect 'append nil)))))
+        (add-hook 'post-command-hook #'maybe-connect 'append nil)
+        ))))
 
 (defun nox-events-buffer (server)
   "Display events buffer for SERVER."
@@ -849,7 +850,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1156,6 +1157,18 @@ under cursor."
            (const :tag "Execute custom commands" :executeCommandProvider)
            (symbol :tag "Other"))))
 
+(defcustom nox-tooltip-border-width 15
+  "The border width of nox tooltip, default is 15 px."
+  :type 'integer)
+
+(defcustom nox-tooltip-timeout 30
+  "The timeout of nox tooltip show time, in seconds."
+  :type 'integer)
+
+(defcustom nox-doc-tooltip-name "*nox doc*"
+  "The name of nox tooltip name."
+  :type 'string)
+
 (defun nox--server-capable (&rest feats)
   "Determine if current server is capable of FEATS."
   (unless (cl-some (lambda (feat)
@@ -1274,6 +1287,7 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (add-hook 'change-major-mode-hook #'nox--managed-mode-off nil t)
     (add-hook 'post-self-insert-hook 'nox--post-self-insert-hook nil t)
     (add-hook 'pre-command-hook 'nox--pre-command-hook nil t)
+    (add-hook 'post-command-hook 'nox-monitor-cursor-change 'append nil)
     (nox--setq-saving xref-prompt-for-identifier nil)
     (nox--setq-saving company-backends '(company-capf))
     (nox--setq-saving company-tooltip-align-annotations t)
@@ -1296,6 +1310,7 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (remove-hook 'change-major-mode-hook #'nox--managed-mode-off t)
     (remove-hook 'post-self-insert-hook 'nox--post-self-insert-hook t)
     (remove-hook 'pre-command-hook 'nox--pre-command-hook t)
+    (remove-hook 'post-command-hook 'nox-monitor-cursor-change nil)
     (cl-loop for (var . saved-binding) in nox--saved-bindings
              do (set (make-local-variable var) saved-binding))
     (remove-function (local 'imenu-create-index-function) #'nox-imenu)
@@ -1579,16 +1594,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1931,7 +1946,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)                 ; test-completion
+          ((eq action 'lambda)             ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -2090,35 +2105,37 @@ is not active."
          (buffer-string))))
    when moresigs concat "\n"))
 
+(defun nox-color-blend (c1 c2 alpha)
+  "Blend two colors C1 and C2 with ALPHA.
+C1 and C2 are hexidecimal strings.
+ALPHA is a number between 0.0 and 1.0 which corresponds to the
+influence of C1 on the result."
+  (apply #'(lambda (r g b)
+             (format "#%02x%02x%02x"
+                     (ash r -8)
+                     (ash g -8)
+                     (ash b -8)))
+         (cl-mapcar
+          (lambda (x y)
+            (round (+ (* x alpha) (* y (- 1 alpha)))))
+          (color-values c1) (color-values c2))))
+
 (defun nox--show-doc (string)
-  (posframe-show
-   nox-doc-tooltip-name
-   :string string
-   :font "WenQuanYi Micro Hei Mono-14"
-   :position (point)
-   :timeout nox-tooltip-timeout
-   :background-color (face-attribute 'nox-tooltip-face :background)
-   :foreground-color (face-attribute 'nox-tooltip-face :foreground)
-   :internal-border-width nox-tooltip-border-width))
-
-(defcustom nox-tooltip-border-width 10
-  "The border width of nox tooltip, default is 10 px."
-  :type 'integer
-  :group 'nox)
-
-(defface nox-tooltip-face
-  '((t (:foreground "green" :background "gray12")))
-  "Face for nox tooltip"
-  :group 'nox)
-
-(defcustom nox-tooltip-timeout 5
-  "The timeout of nox tooltip show time, in seconds."
-  :type 'integer
-  :group 'nox)
-
-(defcustom nox-doc-tooltip-name "*nox doc*"
-  "The name of nox tooltip name."
-  :type 'string)
+  (let* ((bg-mode (frame-parameter nil 'background-mode))
+         (background-color
+          (cond ((eq bg-mode 'dark)
+                 (nox-color-blend (face-background 'default) "#000000" 0.5))
+                ((eq bg-mode 'light)
+                 (nox-color-blend (face-background 'default) "#000000" 0.9)))))
+    (posframe-show
+     nox-doc-tooltip-name
+     :string string
+     :font "WenQuanYi Micro Hei Mono-14"
+     :position (point)
+     :timeout nox-tooltip-timeout
+     :background-color background-color
+     :foreground-color (face-attribute 'default :foreground)
+     :internal-border-width nox-tooltip-border-width)))
 
 (defun nox-show-doc ()
   "NOX's `eldoc-documentation-function' function."
@@ -2158,6 +2175,14 @@ is not active."
                             (nox--show-doc info)))))
          :deferred :textDocument/hover))))
   eldoc-last-message)
+
+(defvar nox-last-position 0
+  "Holds the cursor position from the last run of post-command-hooks.")
+
+(defun nox-monitor-cursor-change ()
+  (unless (equal (point) nox-last-position)
+    (posframe-hide nox-doc-tooltip-name))
+  (setq nox-last-position (point)))
 
 (defun nox-imenu ()
   "NOX's `imenu-create-index-function'."
