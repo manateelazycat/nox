@@ -247,15 +247,13 @@ configuration according to the value of the variable
 `nox-workspace-configuration`, which you may be set in a
 `.dir-locals` file, for example.
 
-There are *no keybindings* specific to Nox, but you can bind stuff
-in `nox-mode-map`, which is active as long as Nox is managing a
-file in your project. The commands don't need to be Nox-specific,
-either:
+- `M-x xref-find-definitions` find the definition of the identifier at point.
 
-```
-(define-key nox-mode-map (kbd "C-c h") 'nox-help-at-point)
-(define-key nox-mode-map (kbd "<f6>") 'xref-find-definitions)
-```
+- `M-x xref-find-definitions-other-window` find the definition of the identifier at point in other window.
+
+- `M-x xref-pop-marker-stack` pop bck to where xref-find-definitions last invoked.
+
+- `M-x xref-find-references` find references to the identifier at point.
 
 <a name="customization"></a>
 # Customization
