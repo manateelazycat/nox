@@ -1,10 +1,11 @@
 # Nox
 
-Nox is LSP client for Emacs.
+Nox is LSP client for Emacs, code fork from [eglot](https://github.com/joaotavora/eglot).
 
-Code fork from [eglot](https://github.com/joaotavora/eglot), to achieve the highest performance, removed a lot of features, such as code diagnostic, snippet expand.
-
-And add many other enhancements, such as use posframe instead eldoc show help documentation etc.
+The project has three goals:
+1. Function: only provide core functions, include code completion, jump definition, code references and rename
+2. Design: Keep UX simple and clean, does not interfere user
+3. Performance: cutting useless functions, optimizing code efficiency, ensure coding fluency
 
 <img src="./screenshot.png">
 
