@@ -16,7 +16,7 @@ My favorite a word from Nox:
 
 # Install dependences
 
-Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [posframe](https://github.com/tumashu/posframe) 
+Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [posframe](https://github.com/tumashu/posframe)
 
 # Install
 
@@ -49,25 +49,25 @@ Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [
 
 `M-x nox` can guess and work out-of-the-box with these servers:
 
-* Javascript: javascript-typescript-stdio
-* Rust: rls
-* Python: pyls
-* Ruby: solargraph
-* Java: eclipse-jdt
-* Bash: bash-language-server
-* PHP: php-language-server
-* C/C++: ccls
-* Haskell: haskell-ide-engine
-* Elm: elm-language-server
-* Kotlin: kotlin-language-server
-* Go: gopls
-* Ocaml: ocaml-language-server
-* R: languageserver
-* Dart: dart_language_server
-* Elixir: elixir-ls
-* Ada: ada_language_server
-* Scala: metals
-* TeX/LaTeX: digestif
+* Javascript's [javascript-typescript-stdio][javascript-typescript-langserver]
+* Rust's [rls][rls]
+* Python's [pyls][pyls]
+* Ruby's [solargraph][solargraph]
+* Java's [Eclipse JDT Language Server][eclipse-jdt]
+* Bash's [bash-language-server][bash-language-server]
+* PHP's [php-language-server][php-language-server]
+* C/C++'s [ccls][ccls]  ([cquery][cquery] and [clangd][clangd] also work)
+* Haskell's [IDE engine][haskell-ide-engine]
+* Elm's [elm-language-server][elm-language-server]
+* Kotlin's [kotlin-language-server][kotlin-language-server]
+* Go's [gopls][gopls]
+* Ocaml's [ocaml-language-server][ocaml-language-server]
+* R's [languageserver][r-languageserver]
+* Dart's [dart_language_server][dart_language_server]
+* Elixir's [elixir-ls][elixir-ls]
+* Ada's [ada_language_server][ada_language_server]
+* Scala's [metals][metals]
+* TeX/LaTeX's [Digestif][digestif]
 
 I'll add to this list as I test more servers. In the meantime you can
 customize `nox-server-programs`:
@@ -304,3 +304,37 @@ lisp:
 - `nox-managed-mode-hook`: Hook run after Nox started or stopped
   managing a buffer.  Use `nox-managed-p` to tell if current buffer
   is still being managed.
+
+[lsp]: https://microsoft.github.io/language-server-protocol/
+[rls]: https://github.com/rust-lang-nursery/rls
+[pyls]: https://github.com/palantir/python-language-server
+[gnuelpa]: https://elpa.gnu.org/packages/eglot.html
+[melpa]: http://melpa.org/#/eglot
+[javascript-typescript-langserver]: https://github.com/sourcegraph/javascript-typescript-langserver
+[emacs-lsp]: https://github.com/emacs-lsp/lsp-mode
+[emacs-lsp-plugins]: https://github.com/emacs-lsp
+[bash-language-server]: https://github.com/mads-hartmann/bash-language-server
+[php-language-server]: https://github.com/felixfbecker/php-language-server
+[company-mode]: https://github.com/company-mode/company-mode
+[cquery]: https://github.com/cquery-project/cquery
+[ccls]: https://github.com/MaskRay/ccls
+[clangd]: https://clang.llvm.org/extra/clangd.html
+[solargraph]: https://github.com/castwide/solargraph
+[windows-subprocess-hang]: https://www.gnu.org/software/emacs/manual/html_node/efaq-w32/Subprocess-hang.html
+[haskell-ide-engine]: https://github.com/haskell/haskell-ide-engine
+[elm-language-server]: https://github.com/elm-tooling/elm-language-server
+[kotlin-language-server]: https://github.com/fwcd/KotlinLanguageServer
+[gopls]: https://github.com/golang/go/wiki/gopls
+[eclipse-jdt]: https://github.com/eclipse/eclipse.jdt.ls
+[ocaml-language-server]: https://github.com/freebroccolo/ocaml-language-server
+[r-languageserver]: https://cran.r-project.org/package=languageserver
+[dart_language_server]: https://github.com/natebosch/dart_language_server
+[elixir-ls]: https://github.com/JakeBecker/elixir-ls
+[news]: https://github.com/joaotavora/eglot/blob/master/NEWS.md
+[ada_language_server]: https://github.com/AdaCore/ada_language_server
+[metals]: http://scalameta.org/metals/
+[digestif]: https://github.com/astoff/digestif
+[company]: http://elpa.gnu.org/packages/company.html
+[flymake]: https://www.gnu.org/software/emacs/manual/html_node/flymake/index.html#Top
+[yasnippet]: http://elpa.gnu.org/packages/yasnippet.html
+[markdown]: https://github.com/defunkt/markdown-mode
