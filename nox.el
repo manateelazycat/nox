@@ -530,11 +530,7 @@ treated as in `nox-dbind'."
                                   :dynamicRegistration :json-false
                                   :codeActionLiteralSupport
                                   '(:codeActionKind
-                                    (:valueSet
-                                     ["quickfix"
-                                      "refactor" "refactor.extract"
-                                      "refactor.inline" "refactor.rewrite"
-                                      "source" "source.organizeImports"])))
+                                    (:valueSet [])))
              :formatting         `(:dynamicRegistration :json-false)
              :rangeFormatting    `(:dynamicRegistration :json-false)
              :rename             `(:dynamicRegistration :json-false)
@@ -2222,37 +2218,6 @@ influence of C1 on the result."
                     :textDocument/rename `(,@(nox--TextDocumentPositionParams)
                                            :newName ,newname))
    current-prefix-arg))
-
-
-(defun nox-code-actions (&optional beg end)
-  "Get and offer to execute code actions between BEG and END."
-  (interactive
-   (let (diags)
-     (cond ((region-active-p) (list (region-beginning) (region-end)))
-           (t (list (point-min) (point-max))))))
-  (unless (nox--server-capable :codeActionProvider)
-    (nox--error "Server can't execute code actions!"))
-  (let* ((server (nox--current-server-or-lose))
-         (menu-items
-          (or (mapcar (jsonrpc-lambda (&rest all &key title &allow-other-keys)
-                        (cons title all))
-                      actions)
-              (nox--error "No code actions here")))
-         (menu `("Nox code actions:" ("dummy" ,@menu-items)))
-         (action (if (listp last-nonmenu-event)
-                     (x-popup-menu last-nonmenu-event menu)
-                   (cdr (assoc (completing-read "[nox] Pick an action: "
-                                                menu-items nil t
-                                                nil nil (car menu-items))
-                               menu-items)))))
-    (nox--dcase action
-      (((Command) command arguments)
-       (nox-execute-command server (intern command) arguments))
-      (((CodeAction) edit command)
-       (when edit (nox--apply-workspace-edit edit))
-       (when command
-         (nox--dbind ((Command) command arguments) command
-           (nox-execute-command server (intern command) arguments)))))))
 
 
 ;;; Dynamic registration

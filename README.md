@@ -234,11 +234,6 @@ Here's a summary of available commands:
 - `M-x nox-format` asks the server to format buffer or the active
   region;
 
-- `M-x nox-code-actions` asks the server for any code actions at
-  point. These may tipically be simple fixes, like deleting an unused
-  variable, or fixing an import. Left click on diagnostics to check if
-  there are any there;
-
 - `M-x nox-show-doc` show documentation for symbol at point.
 
 - `M-x nox-events-buffer` jumps to the events buffer for debugging
