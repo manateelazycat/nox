@@ -1562,16 +1562,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1878,17 +1878,22 @@ is not active."
                 (setq cached-proxies
                       (mapcar
                        (jsonrpc-lambda
-                           (&rest item &key label insertText insertTextFormat
+                           (&rest item &key label insertText filterText insertTextFormat
                                   &allow-other-keys)
                          (let ((proxy
-                                (cond ((and (eql insertTextFormat 2)
-                                            (nox--snippet-expansion-fn))
-                                       (string-trim-left label))
-                                      ((and insertText
-                                            (not (string-empty-p insertText)))
-                                       insertText)
-                                      (t
-                                       (string-trim-left label)))))
+                                (cond
+                                 ;; C++, we will use filterText instead label, avoid too long candidate
+                                 ((and filterText
+                                       (< (length filterText) (length label)))
+                                  (string-trim-left filterText))
+                                 ((and (eql insertTextFormat 2)
+                                       (nox--snippet-expansion-fn))
+                                  (string-trim-left label))
+                                 ((and insertText
+                                       (not (string-empty-p insertText)))
+                                  insertText)
+                                 (t
+                                  (string-trim-left label)))))
                            (unless (zerop (length item))
                              (put-text-property 0 1 'nox--lsp-item item proxy))
                            proxy))
