@@ -510,10 +510,7 @@ treated as in `nox-dbind'."
                                :willSave t :willSaveWaitUntil t :didSave t)
              :completion      (list :dynamicRegistration :json-false
                                     :completionItem
-                                    `(:snippetSupport
-                                      ,(if (nox--snippet-expansion-fn)
-                                           t
-                                         :json-false))
+                                    `(:snippetSupport nil)
                                     :contextSupport t)
              :hover              (list :dynamicRegistration :json-false
                                        :contentFormat ["markdown" "plaintext"])
@@ -850,7 +847,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1104,13 +1101,6 @@ If optional MARKER, return a marker instead"
   (when (keywordp uri) (setq uri (substring (symbol-name uri) 1)))
   (let ((retval (url-filename (url-generic-parse-url (url-unhex-string uri)))))
     (if (eq system-type 'windows-nt) (substring retval 1) retval)))
-
-(defun nox--snippet-expansion-fn ()
-  "Compute a function to expand snippets.
-Doubles as an indicator of snippet support."
-  (and (boundp 'yas-minor-mode)
-       (symbol-value 'yas-minor-mode)
-       'yas-expand-snippet))
 
 (defun nox--format-markup (markup)
   "Format MARKUP according to LSP's spec."
@@ -1566,16 +1556,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1886,13 +1876,10 @@ is not active."
                                   &allow-other-keys)
                          (let ((proxy
                                 (cond
-                                 ;; C++, we will use filterText instead label, avoid too long candidate
+                                 ;; In C++, we will use filterText instead label, avoid too long candidate
                                  ((and filterText
                                        (< (length filterText) (length label)))
                                   (string-trim-left filterText))
-                                 ((and (eql insertTextFormat 2)
-                                       (nox--snippet-expansion-fn))
-                                  (string-trim-left label))
                                  ((and insertText
                                        (not (string-empty-p insertText)))
                                   insertText)
@@ -1979,49 +1966,9 @@ is not active."
             (line-beginning-position))))
        :exit-function
        (lambda (proxy _status)
-         (nox--dbind ((CompletionItem) insertTextFormat
-                      insertText
-                      textEdit
-                      additionalTextEdits)
-             (funcall
-              resolve-maybe
-              (or (get-text-property 0 'nox--lsp-item proxy)
-                  ;; When selecting from the *Completions*
-                  ;; buffer, `proxy' won't have any properties.
-                  ;; A lookup should fix that (github#148)
-                  (get-text-property
-                   0 'nox--lsp-item
-                   (cl-find proxy (funcall proxies) :test #'string=))))
-           (let ((snippet-fn (and (eql insertTextFormat 2)
-                                  (nox--snippet-expansion-fn))))
-             (cond (textEdit
-                    ;; Undo (yes, undo) the newly inserted completion.
-                    ;; If before completion the buffer was "foo.b" and
-                    ;; now is "foo.bar", `proxy' will be "bar".  We
-                    ;; want to delete only "ar" (`proxy' minus the
-                    ;; symbol whose bounds we've calculated before)
-                    ;; (github#160).
-                    (delete-region (+ (- (point) (length proxy))
-                                      (if bounds (- (cdr bounds) (car bounds)) 0))
-                                   (point))
-                    (nox--dbind ((TextEdit) range newText) textEdit
-                      (pcase-let ((`(,beg . ,end) (nox--range-region range)))
-                        (delete-region beg end)
-                        (goto-char beg)
-                        (funcall (or snippet-fn #'insert) newText)))
-                    (when (cl-plusp (length additionalTextEdits))
-                      (nox--apply-text-edits additionalTextEdits)))
-                   (snippet-fn
-                    ;; A snippet should be inserted, but using plain
-                    ;; `insertText'.  This requires us to delete the
-                    ;; whole completion, since `insertText' is the full
-                    ;; completion's text.
-                    (delete-region (- (point) (length proxy)) (point))
-                    (funcall snippet-fn insertText))))
-           (nox--signal-textDocument/didChange)
-           ))))))
-
-(defvar nox--highlights nil "Overlays for textDocument/documentHighlight.")
+         ;; Just send didChange request to server after finish completion.
+         (nox--signal-textDocument/didChange)
+         )))))
 
 (defun nox--hover-info (contents &optional range)
   (let ((heading (and range (pcase-let ((`(,beg . ,end) (nox--range-region range)))
