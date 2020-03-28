@@ -723,7 +723,7 @@ of MANAGED-MAJOR-MODE inside PROJECT automatically become
 \"managed\" by the LSP server, meaning information about their
 contents is exchanged periodically to provide enhanced
 code-analysis via `xref-find-definitions',
-`eldoc-mode', `completion-at-point', among others.
+`completion-at-point', among others.
 
 Interactively, the command attempts to guess MANAGED-MAJOR-MODE
 from current buffer, CLASS and CONTACT from
@@ -1271,7 +1271,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (nox--setq-saving xref-prompt-for-identifier nil)
     (nox--setq-saving company-backends '(company-capf))
     (nox--setq-saving company-tooltip-align-annotations t)
-    (eldoc-mode 1)
     (cl-pushnew (current-buffer) (nox--managed-buffers nox--cached-server)))
    (t
     (remove-hook 'after-change-functions 'nox--after-change t)
@@ -1997,9 +1996,7 @@ is not active."
                                   (list (match-beginning 0) (match-end 0))))
                          (mapcar #'1+ (append label nil)))))
                    (if (and beg end)
-                       (add-face-text-property
-                        beg end
-                        'eldoc-highlight-function-argument))))
+                       (add-face-text-property beg end 'highlight))))
                ;; ...and/or maybe add its doc on a line by its own.
                (when documentation
                  (goto-char (point-max))
@@ -2008,7 +2005,7 @@ is not active."
                           (if (stringp label)
                               label
                             (apply #'buffer-substring (mapcar #'1+ label)))
-                          'face 'eldoc-highlight-function-argument)
+                          'face 'highlight)
                          ": " (nox--format-markup documentation))))))
          (buffer-string))))
    when moresigs concat "\n"))
@@ -2046,7 +2043,7 @@ influence of C1 on the result."
      :internal-border-width nox-tooltip-border-width)))
 
 (defun nox-show-doc ()
-  "NOX's `eldoc-documentation-function' function."
+  "Show documentation at point, use by `posframe'."
   (interactive)
   (let* ((buffer (current-buffer))
          (server (nox--current-server-or-lose))
@@ -2062,7 +2059,7 @@ influence of C1 on the result."
          server :textDocument/signatureHelp position-params
          :success-fn
          (nox--lambda ((SignatureHelp)
-                   signatures activeSignature activeParameter)
+                       signatures activeSignature activeParameter)
            (when-buffer-window
             (when (cl-plusp (length signatures))
               (setq sig-showing t)
@@ -2081,8 +2078,7 @@ influence of C1 on the result."
                                                (nox--hover-info contents
                                                                 range)))
                             (nox--show-doc info)))))
-         :deferred :textDocument/hover))))
-  eldoc-last-message)
+         :deferred :textDocument/hover)))))
 
 (defvar nox-last-position 0
   "Holds the cursor position from the last run of post-command-hooks.")
