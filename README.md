@@ -271,7 +271,7 @@ documentation on what these do.
 
 - `nox-doc-tooltip-timeout`: The timeout of documentation tooltip show time, default is 30 seconds, tooltip will hide after you change cursor point.
 
-- `nox-doc-tooltip-name`: The name of documentation tooltip.
+- `nox-doc-name`: The name of documentation tooltip.
 
 - `nox-candidate-annotation-limit`: The width limit of candidate annotation.
 

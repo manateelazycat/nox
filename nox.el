@@ -8,7 +8,7 @@
 ;; Copyright (C) 2018, João Távora, all rights reserved.
 ;; Copyright (C) 2020, Andy Stewart, all rights reserved.
 ;; Created: 2020-03-28 16:27:25
-;; Version: 0.1
+;; Version: 0.2
 ;; Last-Updated: 2020-03-28 16:27:25
 ;;           By: Andy Stewart
 ;; URL: http://www.emacswiki.org/emacs/download/nox.el
@@ -66,6 +66,9 @@
 ;;
 
 ;;; Change log:
+;;
+;; 2020/03/30
+;;      * Make `nox-show-doc' works with terminal environment.
 ;;
 ;; 2020/03/28
 ;;      * First released.
@@ -260,7 +263,7 @@ under cursor."
   "The timeout of nox tooltip show time, in seconds."
   :type 'integer)
 
-(defcustom nox-doc-tooltip-name "*nox doc*"
+(defcustom nox-doc-name "*nox doc*"
   "The name of nox tooltip name."
   :type 'string)
 
@@ -889,7 +892,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -1538,16 +1541,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1884,7 +1887,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)                 ; test-completion
+          ((eq action 'lambda)             ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -2038,15 +2041,21 @@ influence of C1 on the result."
                  (nox-color-blend (face-background 'default) "#000000" 0.5))
                 ((eq bg-mode 'light)
                  (nox-color-blend (face-background 'default) "#000000" 0.9)))))
-    (posframe-show
-     nox-doc-tooltip-name
-     :string string
-     :font (format "%s-%s" (frame-parameter nil 'font-parameter) nox-doc-tooltip-font-size)
-     :position (point)
-     :timeout nox-doc-tooltip-timeout
-     :background-color background-color
-     :foreground-color (face-attribute 'default :foreground)
-     :internal-border-width nox-doc-tooltip-border-width)))
+    (if (display-graphic-p)
+        (posframe-show
+         nox-doc-name
+         :string string
+         :font (format "%s-%s" (frame-parameter nil 'font-parameter) nox-doc-tooltip-font-size)
+         :position (point)
+         :timeout nox-doc-tooltip-timeout
+         :background-color background-color
+         :foreground-color (face-attribute 'default :foreground)
+         :internal-border-width nox-doc-tooltip-border-width)
+      (switch-to-buffer-other-window nox-doc-name)
+      (with-current-buffer nox-doc-name
+        (erase-buffer)
+        (insert string)
+        (beginning-of-buffer)))))
 
 (defun nox-show-doc ()
   "Show documentation at point, use by `posframe'."
@@ -2086,7 +2095,7 @@ influence of C1 on the result."
 
 (defun nox-monitor-cursor-change ()
   (unless (equal (point) nox-last-position)
-    (posframe-hide nox-doc-tooltip-name))
+    (posframe-hide nox-doc-name))
   (setq nox-last-position (point)))
 
 (defun nox--apply-text-edits (edits &optional version)
