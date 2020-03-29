@@ -1210,33 +1210,8 @@ and just return it.  PROMPT shouldn't end with a question mark."
 (defvar-local nox--saved-bindings nil
   "Bindings saved by `nox--setq-saving'.")
 
-(defvar nox-stay-out-of '()
-  "List of Emacs things that Nox should try to stay of.
-Before Nox starts \"managing\" a particular buffer, it
-opinionatedly sets some peripheral Emacs facilites.
-Xref and Company.  These overriding settings help ensure
-consistent Nox behaviour and only stay in place until
-\"managing\" stops (usually via `nox-shutdown'), whereupon the
-previous settings are restored.
-
-However, if you wish for Nox to stay out of a particular Emacs
-facility that you'd like to keep control of, add a string, a
-symbol, or a regexp here that will be matched against the
-variable's name, and Nox will refrain from setting it.
-
-For example, to keep your Company customization use
-
-(add-to-list 'nox-stay-out-of 'company)")
-
-(defun nox--stay-out-of-p (symbol)
-  "Tell if NOX should stay of of SYMBOL."
-  (cl-find (symbol-name symbol) nox-stay-out-of
-           :test (lambda (s thing)
-                   (let ((re (if (symbolp thing) (symbol-name thing) thing)))
-                     (string-match re s)))))
-
 (defmacro nox--setq-saving (symbol binding)
-  `(unless (or (not (boundp ',symbol)) (nox--stay-out-of-p ',symbol))
+  `(unless (or (not (boundp ',symbol)) )
      (push (cons ',symbol (symbol-value ',symbol)) nox--saved-bindings)
      (setq-local ,symbol ,binding)))
 
