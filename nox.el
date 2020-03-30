@@ -116,7 +116,7 @@
     (python-mode . ("pyls"))
     ((js-mode typescript-mode) . ("javascript-typescript-stdio"))
     (sh-mode . ("bash-language-server" "start"))
-    ((php-mode phps-mode) . (nox-php "intelephense" "--stdio"))
+    ((php-mode phps-mode) . nox--php-contact)
     ((c++-mode c-mode) . ("ccls"))
     ((caml-mode tuareg-mode reason-mode) . ("ocaml-language-server" "--stdio"))
     (ruby-mode . ("solargraph" "socket" "--port" :autoport))
@@ -270,6 +270,11 @@ under cursor."
 (defcustom nox-candidate-annotation-limit 80
   "The limit of annotation."
   :type 'integer)
+
+(defcustom nox-php-server "intelephense"
+  "The default server for PHP mode.
+Can set with `intelephense' or `php-language-server'."
+  :type 'string)
 
 ;;; Constants
 ;;;
@@ -1515,16 +1520,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                        (when nox--managed-mode
-                          (nox--signal-textDocument/didChange)
-                          (setq nox--change-idle-timer nil))))))))
+                            (when nox--managed-mode
+                              (nox--signal-textDocument/didChange)
+                              (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                    deferred &allow-other-keys)
+                                        deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1861,7 +1866,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)                 ; test-completion
+          ((eq action 'lambda)             ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -2258,7 +2263,19 @@ influence of C1 on the result."
 
 (cl-defmethod nox-initialization-options ((server nox-php))
   "Pass dataPaths parameter require by intelephense."
-  (list :dataPaths ""))
+  (cond ((string-equal nox-php-server "intelephense")
+         (list :dataPaths ""))
+        ((string-equal nox-php-server "php-language-server")
+         nil)
+        ))
+
+(defun nox--php-contact (interactive)
+  (cond ((string-equal nox-php-server "intelephense")
+         (cons 'nox-php
+               (list "intelephense" "--stdio")))
+        ((string-equal nox-php-server "php-language-server")
+         ("php" "vendor/felixfbecker/language-server/bin/php-language-server.php"))
+        ))
 
 ;;; eclipse-jdt-specific
 ;;;

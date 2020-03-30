@@ -60,8 +60,8 @@ Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox
 * Ruby's [solargraph][solargraph]
 * Java's [Eclipse JDT Language Server][eclipse-jdt]
 * Bash's [bash-language-server][bash-language-server]
-* PHP's [intelephense][intelephense]
-* C/C++'s [ccls][ccls]  ([cquery][cquery] and [clangd][clangd] also work)
+* PHP's [intelephense][intelephense] or [php-language-server][php-language-server]
+* C/C++'s [ccls][ccls] ([cquery][cquery] and [clangd][clangd] also work)
 * Haskell's [IDE engine][haskell-ide-engine]
 * Elm's [elm-language-server][elm-language-server]
 * Kotlin's [kotlin-language-server][kotlin-language-server]
@@ -316,6 +316,8 @@ lisp:
 - `nox-managed-mode-hook`: Hook run after Nox started or stopped
   managing a buffer.  Use `nox-managed-p` to tell if current buffer
   is still being managed.
+
+- `nox-php-server': Language server for PHP, default is ```intelephense```, you can set with other value: ```php-language-server```
 
 [lsp]: https://microsoft.github.io/language-server-protocol/
 [rls]: https://github.com/rust-lang-nursery/rls
