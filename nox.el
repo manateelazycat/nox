@@ -2288,7 +2288,8 @@ influence of C1 on the result."
   `(:interpreter
     (:properties
      (:InterpreterPath ,nox-python-path))
-    :searchPaths ,nox-mspyls-search-paths))
+    :searchPaths ,nox-mspyls-search-paths
+    :analysisUpdates t))
 
 (defun nox--python-contact (interactive)
   (cond ((string-equal nox-python-server "mspyls")
