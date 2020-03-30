@@ -60,7 +60,7 @@ Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox
 * Ruby's [solargraph][solargraph]
 * Java's [Eclipse JDT Language Server][eclipse-jdt]
 * Bash's [bash-language-server][bash-language-server]
-* PHP's [php-language-server][php-language-server]
+* PHP's [intelephense][intelephense]
 * C/C++'s [ccls][ccls]  ([cquery][cquery] and [clangd][clangd] also work)
 * Haskell's [IDE engine][haskell-ide-engine]
 * Elm's [elm-language-server][elm-language-server]
@@ -326,7 +326,7 @@ lisp:
 [emacs-lsp]: https://github.com/emacs-lsp/lsp-mode
 [emacs-lsp-plugins]: https://github.com/emacs-lsp
 [bash-language-server]: https://github.com/mads-hartmann/bash-language-server
-[php-language-server]: https://github.com/felixfbecker/php-language-server
+[intelephense]: https://github.com/bmewburn/vscode-intelephense
 [company-mode]: https://github.com/company-mode/company-mode
 [cquery]: https://github.com/cquery-project/cquery
 [ccls]: https://github.com/MaskRay/ccls
