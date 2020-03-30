@@ -113,7 +113,7 @@
 
 (defvar nox-server-programs
   '((rust-mode . (nox-rls "rls"))
-    (python-mode . ("pyls"))
+    (python-mode . nox--python-contact)
     ((js-mode typescript-mode) . ("javascript-typescript-stdio"))
     (sh-mode . ("bash-language-server" "start"))
     ((php-mode phps-mode) . nox--php-contact)
@@ -2290,7 +2290,7 @@ influence of C1 on the result."
      (:InterpreterPath ,nox-python-path))
     :searchPaths ,nox-mspyls-search-paths))
 
-(defun nox--mspyls-contact (interactive)
+(defun nox--python-contact (interactive)
   (cond ((string-equal nox-python-server "mspyls")
          (setq-default nox-workspace-configuration
                        '((:python :autoComplete (:extraPaths nil)
