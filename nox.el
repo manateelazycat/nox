@@ -2263,16 +2263,11 @@ influence of C1 on the result."
 
 (cl-defmethod nox-initialization-options ((server nox-php))
   "Pass dataPaths parameter require by intelephense."
-  (cond ((string-equal nox-php-server "intelephense")
-         (list :dataPaths ""))
-        ((string-equal nox-php-server "php-language-server")
-         nil)
-        ))
+  (list :dataPaths ""))
 
 (defun nox--php-contact (interactive)
   (cond ((string-equal nox-php-server "intelephense")
-         (cons 'nox-php
-               (list "intelephense" "--stdio")))
+         (cons 'nox-php (list "intelephense" "--stdio")))
         ((string-equal nox-php-server "php-language-server")
          ("php" "vendor/felixfbecker/language-server/bin/php-language-server.php"))
         ))
