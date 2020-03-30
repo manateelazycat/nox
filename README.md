@@ -319,8 +319,14 @@ lisp:
 
 - `nox-php-server`: Language server for PHP, default is ```intelephense```, you can set with other value: ```php-language-server```
 
-- `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls```. If you choose ```mspyls```, you need execute command ```nox-print-mspyls-download-url``` get download url of mspyls.
-Then extract to the directory ~/.emacs.d/nox/mspyls/ . Not mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
+- `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls```.
+
+If you choose ```mspyls```:
+1. Execute command ```nox-print-mspyls-download-url``` get download url of mspyls.
+2. Then extract to the directory ~/.emacs.d/nox/mspyls/
+3. Permission: ```sudo chmod +x ~/.emacs.d/nox/mspyls/
+
+Note mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
 
 [lsp]: https://microsoft.github.io/language-server-protocol/
 [rls]: https://github.com/rust-lang-nursery/rls
