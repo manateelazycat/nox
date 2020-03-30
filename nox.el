@@ -276,6 +276,20 @@ under cursor."
 Can set with `intelephense' or `php-language-server'."
   :type 'string)
 
+(defcustom nox-python-server "mspyls"
+  "The default server for Python mode.
+Can set with `pyls' or `mspyls'.
+
+If you choose `mspyls', you need execute command `nox-print-mspyls-download-url' get download url of mspyls.
+Then extract the contents of the file to the directory ~/.emacs.d/nox/mspyls/ ."
+  :type 'string)
+
+(defcustom nox-python-server-dir (concat user-emacs-directory
+                                         (file-name-as-directory "nox")
+                                         (file-name-as-directory "mspyls"))
+  "The dir to store mspyls files."
+  :type 'string)
+
 ;;; Constants
 ;;;
 (defconst nox--symbol-kind-names
@@ -897,7 +911,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                            (apply fn server method (append params nil)))))
+                                (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -2257,6 +2271,35 @@ influence of C1 on the result."
   "Handle notification window/progress"
   (setf (nox--spinner server) (list id title done message)))
 
+;;; python specific
+;;;
+
+(defvar nox-python-path "/usr/bin/python")
+(defvar nox-mspyls-search-paths [])
+
+(defclass nox-mspyls (nox-lsp-server) ()
+  :documentation
+  "MS Python Language Server.")
+
+(defclass nox-mspyls (nox-lsp-server) () :documentation "Python's mspyls.")
+
+(cl-defmethod nox-initialization-options ((server nox-mspyls))
+  "Pass dataPaths parameter require by intelephense."
+  `(:interpreter
+    (:properties
+     (:InterpreterPath ,nox-python-path))
+    :searchPaths ,nox-mspyls-search-paths))
+
+(defun nox--mspyls-contact (interactive)
+  (cond ((string-equal nox-python-server "mspyls")
+         (setq-default nox-workspace-configuration
+                       '((:python :autoComplete (:extraPaths nil)
+                                  :analysis (:autoSearchPaths :json-false :usePYTHONPATH :json-false))))
+         (cons 'nox-mspyls (list (concat nox-python-server-dir "Microsoft.Python.LanguageServer"))))
+        ((string-equal nox-python-server "pyls")
+         ("pyls"))
+        ))
+
 ;;; php specific
 ;;;
 (defclass nox-php (nox-lsp-server) () :documentation "PHP's intelephense.")
@@ -2367,6 +2410,45 @@ If INTERACTIVE, prompt user for details."
   ((_server nox-eclipse-jdt) (_cmd (eql java.apply.workspaceEdit)) arguments)
   "Eclipse JDT breaks spec and replies with edits as arguments."
   (mapc #'nox--apply-workspace-edit arguments))
+
+
+;;; Utils
+;;;
+(defun nox-print-mspyls-download-url (&optional channel)
+  "Get the nupkg url of the latest Microsoft Python Language Server."
+  (let ((channel (or channel "stable")))
+    (unless (member channel '("stable" "beta" "daily"))
+      (user-error "Unknown channel: %s" channel))
+    (with-current-buffer
+        (url-retrieve-synchronously
+         (format "%s/python-language-server-%s?restype=container&comp=list&prefix=Python-Language-Server-%s-x64"
+                 "https://pvsc.blob.core.windows.net"
+                 channel
+                 (cond ((eq system-type 'darwin)  "osx")
+                       ((eq system-type 'gnu/linux) "linux")
+                       ((eq system-type 'windows-nt) "win")
+                       (t (user-error "Unsupported system: %s" system-type)))))
+      (goto-char (point-min))
+      (re-search-forward "\n\n")
+      (pcase (xml-parse-region (point) (point-max))
+        (`((EnumerationResults
+            ((ContainerName . ,_))
+            (Prefix nil ,_)
+            (Blobs nil . ,blobs)
+            (NextMarker nil)))
+         (cdar
+          (sort
+           (mapcar (lambda (blob)
+                     (pcase blob
+                       (`(Blob
+                          nil
+                          (Name nil ,_)
+                          (Url nil ,url)
+                          (Properties nil (Last-Modified nil ,last-modified) . ,_))
+                        (cons (apply #'encode-time (parse-time-string last-modified)) url))))
+                   blobs)
+           (lambda (t1 t2)
+             (time-less-p (car t2) (car t1))))))))))
 
 ;;; Improve performance
 ;;;

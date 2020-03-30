@@ -56,7 +56,7 @@ Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox
 
 * Javascript's [javascript-typescript-stdio][javascript-typescript-langserver]
 * Rust's [rls][rls]
-* Python's [pyls][pyls]
+* Python's [mspyls][mspyls] or [pyls][pyls]
 * Ruby's [solargraph][solargraph]
 * Java's [Eclipse JDT Language Server][eclipse-jdt]
 * Bash's [bash-language-server][bash-language-server]
@@ -317,11 +317,15 @@ lisp:
   managing a buffer.  Use `nox-managed-p` to tell if current buffer
   is still being managed.
 
-- `nox-php-server': Language server for PHP, default is ```intelephense```, you can set with other value: ```php-language-server```
+- `nox-php-server`: Language server for PHP, default is ```intelephense```, you can set with other value: ```php-language-server```
+
+- `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls```. If you choose ```mspyls```, you need execute command ```nox-print-mspyls-download-url``` get download url of mspyls.
+Then extract to the directory ~/.emacs.d/nox/mspyls/ . Not mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
 
 [lsp]: https://microsoft.github.io/language-server-protocol/
 [rls]: https://github.com/rust-lang-nursery/rls
 [pyls]: https://github.com/palantir/python-language-server
+[mspyls]: https://github.com/microsoft/python-language-server
 [gnuelpa]: https://elpa.gnu.org/packages/eglot.html
 [melpa]: http://melpa.org/#/eglot
 [javascript-typescript-langserver]: https://github.com/sourcegraph/javascript-typescript-langserver
