@@ -21,7 +21,7 @@ My favorite a word from Nox:
 
 Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [posframe](https://github.com/tumashu/posframe)
 
-# Install
+# Install Nox
 
 1. Clone this repository and put nox.el in your load-path
 
@@ -46,6 +46,8 @@ Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [
   (add-hook hook '(lambda () (nox-ensure))))
 ```
 3. Open file, that's all.
+
+Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox completion will much smooth.
 
 <a name="connecting"></a>
 # Connecting to a server
