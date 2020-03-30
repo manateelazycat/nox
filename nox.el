@@ -116,7 +116,7 @@
     (python-mode . ("pyls"))
     ((js-mode typescript-mode) . ("javascript-typescript-stdio"))
     (sh-mode . ("bash-language-server" "start"))
-    ((php-mode phps-mode) . ("php" "vendor/felixfbecker/language-server/bin/php-language-server.php"))
+    ((php-mode phps-mode) . (nox-php "intelephense" "--stdio"))
     ((c++-mode c-mode) . ("ccls"))
     ((caml-mode tuareg-mode reason-mode) . ("ocaml-language-server" "--stdio"))
     (ruby-mode . ("solargraph" "socket" "--port" :autoport))
@@ -924,8 +924,7 @@ This docstring appeases checkdoc, that's all."
                                          (emacs-pid))
                             :rootPath (expand-file-name default-directory)
                             :rootUri (nox--path-to-uri default-directory)
-                            :initializationOptions (nox-initialization-options
-                                                    server)
+                            :initializationOptions (nox-initialization-options server)
                             :capabilities (nox-client-capabilities server))
                       :success-fn
                       (nox--lambda ((InitializeResult) capabilities serverInfo)
@@ -2252,6 +2251,14 @@ influence of C1 on the result."
    &key id done title message &allow-other-keys)
   "Handle notification window/progress"
   (setf (nox--spinner server) (list id title done message)))
+
+;;; php specific
+;;;
+(defclass nox-php (nox-lsp-server) () :documentation "PHP's intelephense.")
+
+(cl-defmethod nox-initialization-options ((server nox-php))
+  "Pass dataPaths parameter require by intelephense."
+  (list :dataPaths ""))
 
 ;;; eclipse-jdt-specific
 ;;;
