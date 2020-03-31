@@ -578,7 +578,7 @@ treated as in `nox-dbind'."
                                :willSave t :willSaveWaitUntil t :didSave t)
              :completion      (list :dynamicRegistration :json-false
                                     :completionItem
-                                    `(:snippetSupport t)
+                                    `(:snippetSupport :json-false)
                                     :contextSupport t)
              :hover              (list :dynamicRegistration :json-false
                                        :contentFormat ["markdown" "plaintext"])
