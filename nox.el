@@ -120,7 +120,7 @@
     ((c++-mode c-mode) . ("ccls"))
     ((caml-mode tuareg-mode reason-mode) . ("ocaml-language-server" "--stdio"))
     (ruby-mode . ("solargraph" "socket" "--port" :autoport))
-    (haskell-mode . ("hie-wrapper"))
+    (haskell-mode . (nox-hie "hie-wrapper" "--lsp"))
     (elm-mode . ("elm-language-server"))
     (kotlin-mode . ("kotlin-language-server"))
     (go-mode . ("gopls"))
@@ -2412,6 +2412,12 @@ If INTERACTIVE, prompt user for details."
   "Eclipse JDT breaks spec and replies with edits as arguments."
   (mapc #'nox--apply-workspace-edit arguments))
 
+;;; HIE specific
+;;;
+(defclass nox-hie (nox-lsp-server) () :documentation "A custom class for HIE.")
+
+(cl-defmethod nox-initialization-options ((server nox-hie))
+  (list :languageServerHaskell (list :completionSnippetsOn :json-false)))
 
 ;;; Utils
 ;;;
