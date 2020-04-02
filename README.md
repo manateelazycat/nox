@@ -324,7 +324,7 @@ lisp:
 If you choose ```mspyls```:
 1. Execute command ```nox-print-mspyls-download-url``` get download url of mspyls.
 2. Then extract to the directory ~/.emacs.d/nox/mspyls/
-3. Permission: ```sudo chmod +x ~/.emacs.d/nox/mspyls/
+3. Permission: ```sudo chmod -R +x ~/.emacs.d/nox/mspyls/
 
 Note mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
 
