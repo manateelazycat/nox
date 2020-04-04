@@ -8,8 +8,8 @@
 ;; Copyright (C) 2018, João Távora, all rights reserved.
 ;; Copyright (C) 2020, Andy Stewart, all rights reserved.
 ;; Created: 2020-03-28 16:27:25
-;; Version: 0.2
-;; Last-Updated: 2020-03-28 16:27:25
+;; Version: 0.3
+;; Last-Updated: 2020-04-05 01:20:41
 ;;           By: Andy Stewart
 ;; URL: http://www.emacswiki.org/emacs/download/nox.el
 ;; Keywords:
@@ -66,6 +66,9 @@
 ;;
 
 ;;; Change log:
+;;
+;; 2020/04/05
+;;      * Fix `posframe-hide' error
 ;;
 ;; 2020/03/30
 ;;      * Make `nox-show-doc' works with terminal environment.
@@ -846,8 +849,8 @@ INTERACTIVE is t if called interactively."
           ()
           (remove-hook 'post-command-hook #'maybe-connect nil)
           (nox--with-live-buffer buffer
-            (unless nox--managed-mode
-              (apply #'nox--connect (nox--guess-contact))))))
+                                 (unless nox--managed-mode
+                                   (apply #'nox--connect (nox--guess-contact))))))
       (when buffer-file-name
         (add-hook 'post-command-hook #'maybe-connect 'append nil)
         ))))
@@ -911,7 +914,7 @@ This docstring appeases checkdoc, that's all."
                          :stderr (get-buffer-create
                                   (format "*%s stderr*" readable-name)))))))))
          (spread (lambda (fn) (lambda (server method params)
-                                (apply fn server method (append params nil)))))
+                            (apply fn server method (append params nil)))))
          (server
           (apply
            #'make-instance class
@@ -947,44 +950,44 @@ This docstring appeases checkdoc, that's all."
                             :capabilities (nox-client-capabilities server))
                       :success-fn
                       (nox--lambda ((InitializeResult) capabilities serverInfo)
-                        (unless cancelled
-                          (push server
-                                (gethash project nox--servers-by-project))
-                          (setf (nox--capabilities server) capabilities)
-                          (setf (nox--server-info server) serverInfo)
-                          (jsonrpc-notify server :initialized nox--{})
-                          (dolist (buffer (buffer-list))
-                            (with-current-buffer buffer
-                              ;; No need to pass SERVER as an argument: it has
-                              ;; been registered in `nox--servers-by-project',
-                              ;; so that it can be found (and cached) from
-                              ;; `nox--maybe-activate-editing-mode' in any
-                              ;; managed buffer.
-                              (nox--maybe-activate-editing-mode)))
-                          (setf (nox--inhibit-autoreconnect server)
-                                (cond
-                                 ((booleanp nox-autoreconnect)
-                                  (not nox-autoreconnect))
-                                 ((cl-plusp nox-autoreconnect)
-                                  (run-with-timer
-                                   nox-autoreconnect nil
-                                   (lambda ()
-                                     (setf (nox--inhibit-autoreconnect server)
-                                           (null nox-autoreconnect)))))))
-                          (let ((default-directory (car (project-roots project)))
-                                (major-mode managed-major-mode))
-                            (hack-dir-local-variables-non-file-buffer)
-                            (run-hook-with-args 'nox-connect-hook server)
-                            (run-hook-with-args 'nox-server-initialized-hook server))
-                          (nox--message "Connected server with project: %s" (nox-project-nickname server))
-                          (when tag (throw tag t))))
+                               (unless cancelled
+                                 (push server
+                                       (gethash project nox--servers-by-project))
+                                 (setf (nox--capabilities server) capabilities)
+                                 (setf (nox--server-info server) serverInfo)
+                                 (jsonrpc-notify server :initialized nox--{})
+                                 (dolist (buffer (buffer-list))
+                                   (with-current-buffer buffer
+                                     ;; No need to pass SERVER as an argument: it has
+                                     ;; been registered in `nox--servers-by-project',
+                                     ;; so that it can be found (and cached) from
+                                     ;; `nox--maybe-activate-editing-mode' in any
+                                     ;; managed buffer.
+                                     (nox--maybe-activate-editing-mode)))
+                                 (setf (nox--inhibit-autoreconnect server)
+                                       (cond
+                                        ((booleanp nox-autoreconnect)
+                                         (not nox-autoreconnect))
+                                        ((cl-plusp nox-autoreconnect)
+                                         (run-with-timer
+                                          nox-autoreconnect nil
+                                          (lambda ()
+                                            (setf (nox--inhibit-autoreconnect server)
+                                                  (null nox-autoreconnect)))))))
+                                 (let ((default-directory (car (project-roots project)))
+                                       (major-mode managed-major-mode))
+                                   (hack-dir-local-variables-non-file-buffer)
+                                   (run-hook-with-args 'nox-connect-hook server)
+                                   (run-hook-with-args 'nox-server-initialized-hook server))
+                                 (nox--message "Connected server with project: %s" (nox-project-nickname server))
+                                 (when tag (throw tag t))))
                       :timeout nox-connect-timeout
                       :error-fn (nox--lambda ((ResponseError) code message)
-                                  (unless cancelled
-                                    (jsonrpc-shutdown server)
-                                    (let ((msg (format "%s: %s" code message)))
-                                      (if tag (throw tag `(error . ,msg))
-                                        (nox--error msg)))))
+                                         (unless cancelled
+                                           (jsonrpc-shutdown server)
+                                           (let ((msg (format "%s: %s" code message)))
+                                             (if tag (throw tag `(error . ,msg))
+                                               (nox--error msg)))))
                       :timeout-fn (lambda ()
                                     (unless cancelled
                                       (jsonrpc-shutdown server)
@@ -1408,10 +1411,10 @@ THINGS are either registrations or unregisterations (sic)."
   (cl-loop
    for thing in (cl-coerce things 'list)
    do (nox--dbind ((Registration) id method registerOptions) thing
-        (apply (cl-ecase how
-                 (register 'nox-register-capability)
-                 (unregister 'nox-unregister-capability))
-               server (intern method) id registerOptions))))
+                  (apply (cl-ecase how
+                           (register 'nox-register-capability)
+                           (unregister 'nox-unregister-capability))
+                         server (intern method) id registerOptions))))
 
 (cl-defmethod nox-handle-request
   (server (_method (eql client/registerCapability)) &key registrations)
@@ -1534,16 +1537,16 @@ Records BEG, END and PRE-CHANGE-LENGTH locally."
           (run-with-idle-timer
            nox-send-changes-idle-time
            nil (lambda () (nox--with-live-buffer buf
-                            (when nox--managed-mode
-                              (nox--signal-textDocument/didChange)
-                              (setq nox--change-idle-timer nil))))))))
+                                             (when nox--managed-mode
+                                               (nox--signal-textDocument/didChange)
+                                               (setq nox--change-idle-timer nil))))))))
 
 ;; HACK! Launching a deferred sync request with outstanding changes is a
 ;; bad idea, since that might lead to the request never having a
 ;; chance to run, because `jsonrpc-connection-ready-p'.
 (advice-add #'jsonrpc-request :before
             (cl-function (lambda (_proc _method _params &key
-                                        deferred &allow-other-keys)
+                                    deferred &allow-other-keys)
                            (when (and nox--managed-mode deferred)
                              (nox--signal-textDocument/didChange))))
             '((name . nox--signal-textDocument/didChange)))
@@ -1575,23 +1578,23 @@ When called interactively, use the currently active server"
   (apply #'vector
          (mapcar
           (nox--lambda ((ConfigurationItem) scopeUri section)
-            (with-temp-buffer
-              (let* ((uri-path (nox--uri-to-path scopeUri))
-                     (default-directory
-                       (if (and (not (string-empty-p uri-path))
-                                (file-directory-p uri-path))
-                           uri-path
-                         (car (project-roots (nox--project server))))))
-                (setq-local major-mode (nox--major-mode server))
-                (hack-dir-local-variables-non-file-buffer)
-                (alist-get section nox-workspace-configuration
-                           nil nil
-                           (lambda (wsection section)
-                             (string=
-                              (if (keywordp wsection)
-                                  (substring (symbol-name wsection) 1)
-                                wsection)
-                              section))))))
+                   (with-temp-buffer
+                     (let* ((uri-path (nox--uri-to-path scopeUri))
+                            (default-directory
+                              (if (and (not (string-empty-p uri-path))
+                                       (file-directory-p uri-path))
+                                  uri-path
+                                (car (project-roots (nox--project server))))))
+                       (setq-local major-mode (nox--major-mode server))
+                       (hack-dir-local-variables-non-file-buffer)
+                       (alist-get section nox-workspace-configuration
+                                  nil nil
+                                  (lambda (wsection section)
+                                    (string=
+                                     (if (keywordp wsection)
+                                         (substring (symbol-name wsection) 1)
+                                       wsection)
+                                     section))))))
           items)))
 
 (defun nox--signal-textDocument/didChange ()
@@ -1739,10 +1742,10 @@ Try to visit the target file for a richer summary line."
           (nox--current-server-or-lose)
           method (append (nox--TextDocumentPositionParams) extra-params))))
     (nox--collecting-xrefs (collect)
-      (mapc
-       (nox--lambda ((Location) uri range)
-         (collect (nox--xref-make (symbol-at-point) uri range)))
-       (if (vectorp response) response (list response))))))
+                           (mapc
+                            (nox--lambda ((Location) uri range)
+                                     (collect (nox--xref-make (symbol-at-point) uri range)))
+                            (if (vectorp response) response (list response))))))
 
 (cl-defun nox--lsp-xref-helper (method &key extra-params capability )
   "Helper for `nox-find-declaration' & friends."
@@ -1781,13 +1784,13 @@ Try to visit the target file for a richer summary line."
 (cl-defmethod xref-backend-apropos ((_backend (eql nox)) pattern)
   (when (nox--server-capable :workspaceSymbolProvider)
     (nox--collecting-xrefs (collect)
-      (mapc
-       (nox--lambda ((SymbolInformation) name location)
-         (nox--dbind ((Location) uri range) location
-           (collect (nox--xref-make name uri range))))
-       (jsonrpc-request (nox--current-server-or-lose)
-                        :workspace/symbol
-                        `(:query ,pattern))))))
+                           (mapc
+                            (nox--lambda ((SymbolInformation) name location)
+                                     (nox--dbind ((Location) uri range) location
+                                                 (collect (nox--xref-make name uri range))))
+                            (jsonrpc-request (nox--current-server-or-lose)
+                                             :workspace/symbol
+                                             `(:query ,pattern))))))
 
 (defun nox-format-buffer ()
   "Format contents of current buffer."
@@ -1852,12 +1855,12 @@ is not active."
                 (setq cached-proxies
                       (mapcar
                        (jsonrpc-lambda
-                           (&rest item &key label kind insertText filterText
-                                  &allow-other-keys)
-                         (let ((proxy (nox--build-candidate-text kind label insertText filterText)))
-                           (unless (zerop (length item))
-                             (put-text-property 0 1 'nox--lsp-item item proxy))
-                           proxy))
+                        (&rest item &key label kind insertText filterText
+                               &allow-other-keys)
+                        (let ((proxy (nox--build-candidate-text kind label insertText filterText)))
+                          (unless (zerop (length item))
+                            (put-text-property 0 1 'nox--lsp-item item proxy))
+                          proxy))
                        items)))))
            resolved
            (resolve-maybe
@@ -1880,7 +1883,7 @@ is not active."
        (lambda (probe pred action)
          (cond
           ((eq action 'metadata) metadata) ; metadata
-          ((eq action 'lambda)             ; test-completion
+          ((eq action 'lambda)                 ; test-completion
            (member probe (funcall proxies)))
           ((eq (car-safe action) 'boundaries) nil) ; boundaries
           ((and (null action)                      ; try-completion
@@ -1897,21 +1900,21 @@ is not active."
        :annotation-function
        (lambda (proxy)
          (nox--dbind ((CompletionItem) label kind)
-             (get-text-property 0 'nox--lsp-item proxy)
-           (let* ((label (and (stringp label)
-                              (not (string= label ""))
-                              label))
-                  (annotation label)
-                  (annotation-length (length annotation))
-                  (kind-name (cdr (assoc kind nox--kind-names))))
-             (when annotation
-               (format " [%s] %s"
-                       kind-name
-                       (propertize
-                        (if (> annotation-length nox-candidate-annotation-limit)
-                            (concat (substring annotation 0 nox-candidate-annotation-limit) " ...")
-                          annotation)
-                        'face 'font-lock-function-name-face))))))
+                     (get-text-property 0 'nox--lsp-item proxy)
+                     (let* ((label (and (stringp label)
+                                        (not (string= label ""))
+                                        label))
+                            (annotation label)
+                            (annotation-length (length annotation))
+                            (kind-name (cdr (assoc kind nox--kind-names))))
+                       (when annotation
+                         (format " [%s] %s"
+                                 kind-name
+                                 (propertize
+                                  (if (> annotation-length nox-candidate-annotation-limit)
+                                      (concat (substring annotation 0 nox-candidate-annotation-limit) " ...")
+                                    annotation)
+                                  'face 'font-lock-function-name-face))))))
        :company-doc-buffer
        (lambda (proxy)
          (let* ((documentation
@@ -1963,53 +1966,53 @@ is not active."
    for (sig . moresigs) on (append sigs nil) for i from 0
    concat
    (nox--dbind ((SignatureInformation) label documentation parameters) sig
-     (with-temp-buffer
-       (save-excursion (insert label))
-       (let (params-start params-end)
-         ;; Ad-hoc attempt to parse label as <name>(<params>)
-         (when (looking-at "\\([^(]+\\)(\\([^)]+\\))")
-           (setq params-start (match-beginning 2) params-end (match-end 2))
-           (add-face-text-property (match-beginning 1) (match-end 1)
-                                   'font-lock-function-name-face))
-         (when (eql i active-sig)
-           ;; Decide whether to add one-line-summary to signature line
-           (when (and (stringp documentation)
-                      (string-match "[[:space:]]*\\([^.\r\n]+[.]?\\)"
-                                    documentation))
-             (setq documentation (match-string 1 documentation))
-             (unless (string-prefix-p (string-trim documentation) label)
-               (goto-char (point-max))
-               (insert ": " (nox--format-markup documentation))))
-           ;; Decide what to do with the active parameter...
-           (when (and (eql i active-sig) active-param
-                      (< -1 active-param (length parameters)))
-             (nox--dbind ((ParameterInformation) label documentation)
-                 (aref parameters active-param)
-               ;; ...perhaps highlight it in the formals list
-               (when params-start
-                 (goto-char params-start)
-                 (pcase-let
-                     ((`(,beg ,end)
-                       (if (stringp label)
-                           (let ((case-fold-search nil))
-                             (and (re-search-forward
-                                   (concat "\\<" (regexp-quote label) "\\>")
-                                   params-end t)
-                                  (list (match-beginning 0) (match-end 0))))
-                         (mapcar #'1+ (append label nil)))))
-                   (if (and beg end)
-                       (add-face-text-property beg end 'highlight))))
-               ;; ...and/or maybe add its doc on a line by its own.
-               (when documentation
-                 (goto-char (point-max))
-                 (insert "\n"
-                         (propertize
-                          (if (stringp label)
-                              label
-                            (apply #'buffer-substring (mapcar #'1+ label)))
-                          'face 'highlight)
-                         ": " (nox--format-markup documentation))))))
-         (buffer-string))))
+               (with-temp-buffer
+                 (save-excursion (insert label))
+                 (let (params-start params-end)
+                   ;; Ad-hoc attempt to parse label as <name>(<params>)
+                   (when (looking-at "\\([^(]+\\)(\\([^)]+\\))")
+                     (setq params-start (match-beginning 2) params-end (match-end 2))
+                     (add-face-text-property (match-beginning 1) (match-end 1)
+                                             'font-lock-function-name-face))
+                   (when (eql i active-sig)
+                     ;; Decide whether to add one-line-summary to signature line
+                     (when (and (stringp documentation)
+                                (string-match "[[:space:]]*\\([^.\r\n]+[.]?\\)"
+                                              documentation))
+                       (setq documentation (match-string 1 documentation))
+                       (unless (string-prefix-p (string-trim documentation) label)
+                         (goto-char (point-max))
+                         (insert ": " (nox--format-markup documentation))))
+                     ;; Decide what to do with the active parameter...
+                     (when (and (eql i active-sig) active-param
+                                (< -1 active-param (length parameters)))
+                       (nox--dbind ((ParameterInformation) label documentation)
+                                   (aref parameters active-param)
+                                   ;; ...perhaps highlight it in the formals list
+                                   (when params-start
+                                     (goto-char params-start)
+                                     (pcase-let
+                                         ((`(,beg ,end)
+                                           (if (stringp label)
+                                               (let ((case-fold-search nil))
+                                                 (and (re-search-forward
+                                                       (concat "\\<" (regexp-quote label) "\\>")
+                                                       params-end t)
+                                                      (list (match-beginning 0) (match-end 0))))
+                                             (mapcar #'1+ (append label nil)))))
+                                       (if (and beg end)
+                                           (add-face-text-property beg end 'highlight))))
+                                   ;; ...and/or maybe add its doc on a line by its own.
+                                   (when documentation
+                                     (goto-char (point-max))
+                                     (insert "\n"
+                                             (propertize
+                                              (if (stringp label)
+                                                  label
+                                                (apply #'buffer-substring (mapcar #'1+ label)))
+                                              'face 'highlight)
+                                             ": " (nox--format-markup documentation))))))
+                   (buffer-string))))
    when moresigs concat "\n"))
 
 (defun nox-color-blend (c1 c2 alpha)
@@ -2035,15 +2038,17 @@ influence of C1 on the result."
                 ((eq bg-mode 'light)
                  (nox-color-blend (face-background 'default) "#000000" 0.9)))))
     (if (posframe-workable-p)
-        (posframe-show
-         nox-doc-name
-         :string string
-         :font (format "%s-%s" (frame-parameter nil 'font-parameter) nox-doc-tooltip-font-size)
-         :position (point)
-         :timeout nox-doc-tooltip-timeout
-         :background-color background-color
-         :foreground-color (face-attribute 'default :foreground)
-         :internal-border-width nox-doc-tooltip-border-width)
+        (progn
+          (require 'posframe)
+          (posframe-show
+           nox-doc-name
+           :string string
+           :font (format "%s-%s" (frame-parameter nil 'font-parameter) nox-doc-tooltip-font-size)
+           :position (point)
+           :timeout nox-doc-tooltip-timeout
+           :background-color background-color
+           :foreground-color (face-attribute 'default :foreground)
+           :internal-border-width nox-doc-tooltip-border-width))
       (switch-to-buffer-other-window nox-doc-name)
       (with-current-buffer nox-doc-name
         (erase-buffer)
@@ -2066,21 +2071,21 @@ influence of C1 on the result."
          server :textDocument/signatureHelp position-params
          :success-fn
          (nox--lambda ((SignatureHelp) signatures activeSignature activeParameter)
-           (when-buffer-window
-            (when (cl-plusp (length signatures))
-              (setq sig-showing t)
-              (nox--show-doc (nox--sig-info signatures activeSignature activeParameter)))))
+                  (when-buffer-window
+                   (when (cl-plusp (length signatures))
+                     (setq sig-showing t)
+                     (nox--show-doc (nox--sig-info signatures activeSignature activeParameter)))))
          :deferred :textDocument/signatureHelp))
       (when (nox--server-capable :hoverProvider)
         (jsonrpc-async-request
          server :textDocument/hover position-params
          :success-fn (nox--lambda ((Hover) contents range)
-                       (unless sig-showing
-                         (when-buffer-window
-                          (when-let (info (and (not (seq-empty-p contents))
-                                               (nox--hover-info contents
-                                                                range)))
-                            (nox--show-doc info)))))
+                              (unless sig-showing
+                                (when-buffer-window
+                                 (when-let (info (and (not (seq-empty-p contents))
+                                                      (nox--hover-info contents
+                                                                       range)))
+                                   (nox--show-doc info)))))
          :deferred :textDocument/hover)))))
 
 (defvar nox-last-position 0
@@ -2088,7 +2093,8 @@ influence of C1 on the result."
 
 (defun nox-monitor-cursor-change ()
   (unless (equal (point) nox-last-position)
-    (posframe-hide nox-doc-name))
+    (ignore-errors
+      (posframe-hide nox-doc-name)))
   (setq nox-last-position (point)))
 
 (defun nox--apply-text-edits (edits &optional version)
@@ -2134,7 +2140,7 @@ influence of C1 on the result."
                                                 length))))
                       (progress-reporter-update reporter (cl-incf done)))))))
             (mapcar (nox--lambda ((TextEdit) range newText)
-                      (cons newText (nox--range-region range 'markers)))
+                             (cons newText (nox--range-region range 'markers)))
                     (reverse edits)))
       (undo-amalgamate-change-group change-group)
       (progress-reporter-done reporter))))
@@ -2142,38 +2148,38 @@ influence of C1 on the result."
 (defun nox--apply-workspace-edit (wedit &optional confirm)
   "Apply the workspace edit WEDIT.  If CONFIRM, ask user first."
   (nox--dbind ((WorkspaceEdit) changes documentChanges) wedit
-    (if (or (and changes
-                 (> (length changes) 0))
-            (and documentChanges
-                 (> (length documentChanges) 0)))
-        (let ((prepared
-               (mapcar (nox--lambda ((TextDocumentEdit) textDocument edits)
-                         (nox--dbind ((VersionedTextDocumentIdentifier) uri version)
-                             textDocument
-                           (list (nox--uri-to-path uri) edits version)))
-                       documentChanges))
-              edit)
-          (cl-loop for (uri edits) on changes by #'cddr
-                   do (push (list (nox--uri-to-path uri) edits) prepared))
-          (if (or confirm
-                  (cl-notevery #'find-buffer-visiting
-                               (mapcar #'car prepared)))
-              (unless (y-or-n-p
-                       (format "[nox] Server wants to edit (y or n): \n  %s\n Proceed? "
-                               (mapconcat #'identity (mapcar #'car prepared) "\n  ")))
-                (nox--error "User cancelled server edit")))
-          (while (setq edit (car prepared))
-            (pcase-let ((`(,path ,edits ,version)  edit))
-              (with-current-buffer (find-file-noselect path)
-                (nox--apply-text-edits edits version))
-              (pop prepared))
-            t)
-          (unwind-protect
-              (if prepared (nox--warn "Caution: edits of files %s failed."
-                                      (mapcar #'car prepared))
-                (nox--message "Edit successful!"))))
-      ;; If respond arguments is nil, something wrong in LSP server.
-      (nox--message "Nothing change, please execute command `nox-stderr-buffer` to check reason!"))))
+              (if (or (and changes
+                           (> (length changes) 0))
+                      (and documentChanges
+                           (> (length documentChanges) 0)))
+                  (let ((prepared
+                         (mapcar (nox--lambda ((TextDocumentEdit) textDocument edits)
+                                          (nox--dbind ((VersionedTextDocumentIdentifier) uri version)
+                                                      textDocument
+                                                      (list (nox--uri-to-path uri) edits version)))
+                                 documentChanges))
+                        edit)
+                    (cl-loop for (uri edits) on changes by #'cddr
+                             do (push (list (nox--uri-to-path uri) edits) prepared))
+                    (if (or confirm
+                            (cl-notevery #'find-buffer-visiting
+                                         (mapcar #'car prepared)))
+                        (unless (y-or-n-p
+                                 (format "[nox] Server wants to edit (y or n): \n  %s\n Proceed? "
+                                         (mapconcat #'identity (mapcar #'car prepared) "\n  ")))
+                          (nox--error "User cancelled server edit")))
+                    (while (setq edit (car prepared))
+                      (pcase-let ((`(,path ,edits ,version)  edit))
+                        (with-current-buffer (find-file-noselect path)
+                          (nox--apply-text-edits edits version))
+                        (pop prepared))
+                      t)
+                    (unwind-protect
+                        (if prepared (nox--warn "Caution: edits of files %s failed."
+                                                (mapcar #'car prepared))
+                          (nox--message "Edit successful!"))))
+                ;; If respond arguments is nil, something wrong in LSP server.
+                (nox--message "Nothing change, please execute command `nox-stderr-buffer` to check reason!"))))
 
 (defun nox-rename (newname)
   "Rename the current symbol to NEWNAME."
@@ -2208,7 +2214,7 @@ influence of C1 on the result."
   (nox-unregister-capability server method id)
   (let* (success
          (globs (mapcar (nox--lambda ((FileSystemWatcher) globPattern)
-                          globPattern)
+                                 globPattern)
                         watchers))
          (glob-dirs
           (delete-dups (mapcar #'file-name-directory
