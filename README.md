@@ -328,6 +328,8 @@ If you choose ```mspyls```:
 
 Note mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
 
+- `nox-optimization-p': Improve performance by adjust GC limit and disable ```bidi-display-reordering```. If you don't need Nox set this, change this option to nil.
+
 [lsp]: https://microsoft.github.io/language-server-protocol/
 [rls]: https://github.com/rust-lang-nursery/rls
 [pyls]: https://github.com/palantir/python-language-server

@@ -2468,18 +2468,25 @@ If INTERACTIVE, prompt user for details."
 
 ;;; Improve performance
 ;;;
-;; Disable garbage collection when entering commands.
-(defun max-gc-limit ()
-  (setq gc-cons-threshold most-positive-fixnum))
+(defcustom nox-optimization-p t
+  "Improve performance by adjust GC limit and disable `bidi-display-reordering'.
 
-(defun reset-gc-limit ()
-  (setq gc-cons-threshold 800000))
+If you don't need Nox set this, change this option to nil."
+  :type 'boolean)
 
-(add-hook 'minibuffer-setup-hook #'max-gc-limit)
-(add-hook 'minibuffer-exit-hook #'reset-gc-limit)
+(when nox-optimization-p
+  ;; Disable garbage collection when entering commands.
+  (defun max-gc-limit ()
+    (setq gc-cons-threshold most-positive-fixnum))
 
-;; Improve the performance of rendering long lines.
-(setq-default bidi-display-reordering nil)
+  (defun reset-gc-limit ()
+    (setq gc-cons-threshold 2000000))
+
+  (add-hook 'minibuffer-setup-hook #'max-gc-limit)
+  (add-hook 'minibuffer-exit-hook #'reset-gc-limit)
+
+  ;; Improve the performance of rendering long lines.
+  (setq-default bidi-display-reordering nil))
 
 (provide 'nox)
 ;;; nox.el ends here
