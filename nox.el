@@ -2305,7 +2305,10 @@ influence of C1 on the result."
          (setq-default nox-workspace-configuration
                        '((:python :autoComplete (:extraPaths nil)
                                   :analysis (:autoSearchPaths :json-false :usePYTHONPATH :json-false))))
-         (cons 'nox-mspyls (list (concat nox-python-server-dir "Microsoft.Python.LanguageServer"))))
+         (cons 'nox-mspyls (list (concat nox-python-server-dir
+                                         (if (eq system-type 'windows-nt)
+                                             "Microsoft.Python.LanguageServer.exe"
+                                           "Microsoft.Python.LanguageServer")))))
         ((string-equal nox-python-server "pyls")
          (list "pyls"))
         ))
