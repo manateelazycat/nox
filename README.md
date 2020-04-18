@@ -267,7 +267,7 @@ Here's a quick summary of the customization options.  In Nox's
 customization group (`M-x customize-group`) there is more
 documentation on what these do.
 
-- `nox-doc-tooltip-font-size`: The font size for documentation tooltip.
+- `nox-doc-tooltip-font`: The font for documentation tooltip, font format follow rule ```fontname-fontsize```.
 
 - `nox-doc-tooltip-border-width`: The border width of documentation tooltip.
 
