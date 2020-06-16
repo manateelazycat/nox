@@ -40,6 +40,7 @@ Nox depend on [company-mode](https://github.com/company-mode/company-mode) and [
                'php-mode-hook
                'c-mode-common-hook
                'c-mode-hook
+               'csharp-mode-hook
                'c++-mode-hook
                'haskell-mode-hook
                ))
@@ -62,6 +63,7 @@ Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox
 * Bash's [bash-language-server][bash-language-server]
 * PHP's [intelephense][intelephense] or [php-language-server][php-language-server]
 * C/C++'s [ccls][ccls] ([cquery][cquery] and [clangd][clangd] also work)
+* CSharp [OmniSharp][OmniSharp]
 * Haskell's [IDE engine][haskell-ide-engine]
 * Elm's [elm-language-server][elm-language-server]
 * Kotlin's [kotlin-language-server][kotlin-language-server]
@@ -319,6 +321,8 @@ lisp:
 
 - `nox-php-server`: Language server for PHP, default is ```intelephense```, you can set with other value: ```php-language-server```
 
+- `nox-omni-sharp-path`: Language server path for OmniSharp, default is ```~/.emacs.d/.cache/omnisharp/server/v1.34.5/OmniSharp.exe```, you can set with other value.
+
 - `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls```.
 
 If you choose ```mspyls```:
@@ -341,6 +345,7 @@ Note mspyls need index file before respond completion request, so please don't t
 [emacs-lsp-plugins]: https://github.com/emacs-lsp
 [bash-language-server]: https://github.com/mads-hartmann/bash-language-server
 [intelephense]: https://github.com/bmewburn/vscode-intelephense
+[OmniSharp]: http://www.omnisharp.net/
 [php-language-server]: https://github.com/felixfbecker/php-language-server
 [company-mode]: https://github.com/company-mode/company-mode
 [cquery]: https://github.com/cquery-project/cquery

@@ -114,6 +114,8 @@
   :prefix "nox-"
   :group 'applications)
 
+(defvar nox-omni-sharp-path "~/.emacs.d/.cache/omnisharp/server/v1.34.5/OmniSharp.exe")
+
 (defvar nox-server-programs
   '((rust-mode . (nox-rls "rls"))
     (python-mode . nox--python-contact)
@@ -135,6 +137,7 @@
     (scala-mode . ("metals-emacs"))
     ((tex-mode context-mode texinfo-mode bibtex-mode) . ("digestif"))
     (dockerfile-mode . ("docker-langserver" "--stdio"))
+    (csharp-mode . (nox-omni-sharp-path "-lsp"))
     (css-mode "css-languageserver" "--stdio")
     (html-mode "html-languageserver" "--stdio")
     (json-mode "json-languageserver" "--stdio"))
