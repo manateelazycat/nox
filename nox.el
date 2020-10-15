@@ -1273,7 +1273,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (add-hook 'change-major-mode-hook #'nox--managed-mode-off nil t)
     (add-hook 'post-self-insert-hook 'nox--post-self-insert-hook nil t)
     (add-hook 'pre-command-hook 'nox--pre-command-hook nil t)
-    (add-hook 'post-command-hook 'nox-monitor-cursor-change 'append nil)
     (nox--setq-saving xref-prompt-for-identifier nil)
     (nox--setq-saving company-backends '(company-capf))
     (nox--setq-saving company-tooltip-align-annotations t)
@@ -1292,7 +1291,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (remove-hook 'change-major-mode-hook #'nox--managed-mode-off t)
     (remove-hook 'post-self-insert-hook 'nox--post-self-insert-hook t)
     (remove-hook 'pre-command-hook 'nox--pre-command-hook t)
-    (remove-hook 'post-command-hook 'nox-monitor-cursor-change nil)
     (cl-loop for (var . saved-binding) in nox--saved-bindings
              do (set (make-local-variable var) saved-binding))
     (let ((server nox--cached-server))
@@ -2041,7 +2039,7 @@ influence of C1 on the result."
                  (nox-color-blend (face-background 'default) "#000000" 0.5))
                 ((eq bg-mode 'light)
                  (nox-color-blend (face-background 'default) "#000000" 0.9)))))
-    (if (posframe-workable-p)
+    (if (featurep 'posframe)
         (progn
           (require 'posframe)
           (if nox-doc-tooltip-font
@@ -2061,7 +2059,9 @@ influence of C1 on the result."
                :timeout nox-doc-tooltip-timeout
                :background-color background-color
                :foreground-color (face-attribute 'default :foreground)
-               :internal-border-width nox-doc-tooltip-border-width)))
+               :internal-border-width nox-doc-tooltip-border-width))
+		  (sit-for most-positive-fixnum t)
+		  (posframe-hide nox-doc-name))
       (switch-to-buffer-other-window nox-doc-name)
       (with-current-buffer nox-doc-name
         (erase-buffer)
@@ -2100,15 +2100,6 @@ influence of C1 on the result."
                                                                 range)))
                             (nox--show-doc info)))))
          :deferred :textDocument/hover)))))
-
-(defvar nox-last-position 0
-  "Holds the cursor position from the last run of post-command-hooks.")
-
-(defun nox-monitor-cursor-change ()
-  (unless (equal (point) nox-last-position)
-    (ignore-errors
-      (posframe-hide nox-doc-name)))
-  (setq nox-last-position (point)))
 
 (defun nox--apply-text-edits (edits &optional version)
   "Apply EDITS for current buffer if at VERSION, or if it's nil."
