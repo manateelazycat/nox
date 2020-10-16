@@ -2022,15 +2022,16 @@ is not active."
 C1 and C2 are hexidecimal strings.
 ALPHA is a number between 0.0 and 1.0 which corresponds to the
 influence of C1 on the result."
-  (apply #'(lambda (r g b)
-             (format "#%02x%02x%02x"
-                     (ash r -8)
-                     (ash g -8)
-                     (ash b -8)))
-         (cl-mapcar
-          (lambda (x y)
-            (round (+ (* x alpha) (* y (- 1 alpha)))))
-          (color-values c1) (color-values c2))))
+  (ignore-errors
+    (apply #'(lambda (r g b)
+               format "#%02x%02x%02x"
+               (ash r -8)
+               (ash g -8)
+               (ash b -8))
+           (cl-mapcar
+            (lambda (x y)
+              (round (+ (* x alpha) (* y (- 1 alpha)))))
+            (color-values c1) (color-values c2)))))
 
 (defun nox--show-doc (string)
   (let* ((bg-mode (frame-parameter nil 'background-mode))
@@ -2039,34 +2040,47 @@ influence of C1 on the result."
                  (nox-color-blend (face-background 'default) "#000000" 0.5))
                 ((eq bg-mode 'light)
                  (nox-color-blend (face-background 'default) "#000000" 0.9)))))
-    (if (featurep 'posframe)
-        (progn
-          (require 'posframe)
-          (if nox-doc-tooltip-font
-              (posframe-show
-               nox-doc-name
-               :string string
-               :font nox-doc-tooltip-font
-               :position (point)
-               :timeout nox-doc-tooltip-timeout
-               :background-color background-color
-               :foreground-color (face-attribute 'default :foreground)
-               :internal-border-width nox-doc-tooltip-border-width)
-            (posframe-show
-               nox-doc-name
-               :string string
-               :position (point)
-               :timeout nox-doc-tooltip-timeout
-               :background-color background-color
-               :foreground-color (face-attribute 'default :foreground)
-               :internal-border-width nox-doc-tooltip-border-width))
-		  (sit-for most-positive-fixnum t)
-		  (posframe-hide nox-doc-name))
-      (switch-to-buffer-other-window nox-doc-name)
-      (with-current-buffer nox-doc-name
-        (erase-buffer)
-        (insert string)
-        (beginning-of-buffer)))))
+    (cond
+     ((featurep 'posframe)
+      (require 'posframe)
+      (if nox-doc-tooltip-font
+          (posframe-show
+           nox-doc-name
+           :string string
+           :font nox-doc-tooltip-font
+           :position (point)
+           :timeout nox-doc-tooltip-timeout
+           :background-color background-color
+           :foreground-color (face-attribute 'default :foreground)
+           :internal-border-width nox-doc-tooltip-border-width)
+        (posframe-show
+         nox-doc-name
+         :string string
+         :position (point)
+         :timeout nox-doc-tooltip-timeout
+         :background-color background-color
+         :foreground-color (face-attribute 'default :foreground)
+         :internal-border-width nox-doc-tooltip-border-width)
+        (sit-for most-positive-fixnum t)
+        (posframe-hide nox-doc-name)))
+     ((featurep 'popup)
+      (require 'popup)
+      (let ((pop (popup-tip string :nowait t :margin 1)))
+        (sit-for most-positive-fixnum t)
+        (popup-delete pop)))
+     (t
+      (let ((win-cfg (current-window-configuration)))
+        (switch-to-buffer-other-window nox-doc-name)
+        (with-current-buffer nox-doc-name
+          (erase-buffer)
+          (insert string)
+          (beginning-of-buffer)
+          (read-only-mode t)
+          (local-set-key (kbd "q") 'kill-buffer-and-window)
+          (local-set-key (kbd "n") 'forward-line)
+          (local-set-key (kbd "j") 'forward-line)
+          (local-set-key (kbd "p") 'previous-line)
+          (local-set-key (kbd "k") 'previous-line)))))))
 
 (defun nox-show-doc ()
   "Show documentation at point, use by `posframe'."
