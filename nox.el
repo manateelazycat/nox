@@ -1273,7 +1273,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (add-hook 'change-major-mode-hook #'nox--managed-mode-off nil t)
     (add-hook 'post-self-insert-hook 'nox--post-self-insert-hook nil t)
     (add-hook 'pre-command-hook 'nox--pre-command-hook nil t)
-    (add-hook 'post-command-hook 'nox-monitor-cursor-change 'append nil)
     (nox--setq-saving xref-prompt-for-identifier nil)
     (nox--setq-saving company-backends '(company-capf))
     (nox--setq-saving company-tooltip-align-annotations t)
@@ -1292,7 +1291,6 @@ Use `nox-managed-p' to determine if current buffer is managed.")
     (remove-hook 'change-major-mode-hook #'nox--managed-mode-off t)
     (remove-hook 'post-self-insert-hook 'nox--post-self-insert-hook t)
     (remove-hook 'pre-command-hook 'nox--pre-command-hook t)
-    (remove-hook 'post-command-hook 'nox-monitor-cursor-change nil)
     (cl-loop for (var . saved-binding) in nox--saved-bindings
              do (set (make-local-variable var) saved-binding))
     (let ((server nox--cached-server))
@@ -2024,15 +2022,16 @@ is not active."
 C1 and C2 are hexidecimal strings.
 ALPHA is a number between 0.0 and 1.0 which corresponds to the
 influence of C1 on the result."
-  (apply #'(lambda (r g b)
-             (format "#%02x%02x%02x"
-                     (ash r -8)
-                     (ash g -8)
-                     (ash b -8)))
-         (cl-mapcar
-          (lambda (x y)
-            (round (+ (* x alpha) (* y (- 1 alpha)))))
-          (color-values c1) (color-values c2))))
+  (ignore-errors
+    (apply #'(lambda (r g b)
+               format "#%02x%02x%02x"
+               (ash r -8)
+               (ash g -8)
+               (ash b -8))
+           (cl-mapcar
+            (lambda (x y)
+              (round (+ (* x alpha) (* y (- 1 alpha)))))
+            (color-values c1) (color-values c2)))))
 
 (defun nox--show-doc (string)
   (let* ((bg-mode (frame-parameter nil 'background-mode))
@@ -2041,32 +2040,47 @@ influence of C1 on the result."
                  (nox-color-blend (face-background 'default) "#000000" 0.5))
                 ((eq bg-mode 'light)
                  (nox-color-blend (face-background 'default) "#000000" 0.9)))))
-    (if (posframe-workable-p)
-        (progn
-          (require 'posframe)
-          (if nox-doc-tooltip-font
-              (posframe-show
-               nox-doc-name
-               :string string
-               :font nox-doc-tooltip-font
-               :position (point)
-               :timeout nox-doc-tooltip-timeout
-               :background-color background-color
-               :foreground-color (face-attribute 'default :foreground)
-               :internal-border-width nox-doc-tooltip-border-width)
-            (posframe-show
-               nox-doc-name
-               :string string
-               :position (point)
-               :timeout nox-doc-tooltip-timeout
-               :background-color background-color
-               :foreground-color (face-attribute 'default :foreground)
-               :internal-border-width nox-doc-tooltip-border-width)))
-      (switch-to-buffer-other-window nox-doc-name)
-      (with-current-buffer nox-doc-name
-        (erase-buffer)
-        (insert string)
-        (beginning-of-buffer)))))
+    (cond
+     ((featurep 'posframe)
+      (require 'posframe)
+      (if nox-doc-tooltip-font
+          (posframe-show
+           nox-doc-name
+           :string string
+           :font nox-doc-tooltip-font
+           :position (point)
+           :timeout nox-doc-tooltip-timeout
+           :background-color background-color
+           :foreground-color (face-attribute 'default :foreground)
+           :internal-border-width nox-doc-tooltip-border-width)
+        (posframe-show
+         nox-doc-name
+         :string string
+         :position (point)
+         :timeout nox-doc-tooltip-timeout
+         :background-color background-color
+         :foreground-color (face-attribute 'default :foreground)
+         :internal-border-width nox-doc-tooltip-border-width)
+        (sit-for most-positive-fixnum t)
+        (posframe-hide nox-doc-name)))
+     ((featurep 'popup)
+      (require 'popup)
+      (let ((pop (popup-tip string :nowait t :margin 1)))
+        (sit-for most-positive-fixnum t)
+        (popup-delete pop)))
+     (t
+      (let ((win-cfg (current-window-configuration)))
+        (switch-to-buffer-other-window nox-doc-name)
+        (with-current-buffer nox-doc-name
+          (erase-buffer)
+          (insert string)
+          (beginning-of-buffer)
+          (read-only-mode t)
+          (local-set-key (kbd "q") 'kill-buffer-and-window)
+          (local-set-key (kbd "n") 'forward-line)
+          (local-set-key (kbd "j") 'forward-line)
+          (local-set-key (kbd "p") 'previous-line)
+          (local-set-key (kbd "k") 'previous-line)))))))
 
 (defun nox-show-doc ()
   "Show documentation at point, use by `posframe'."
@@ -2100,15 +2114,6 @@ influence of C1 on the result."
                                                                 range)))
                             (nox--show-doc info)))))
          :deferred :textDocument/hover)))))
-
-(defvar nox-last-position 0
-  "Holds the cursor position from the last run of post-command-hooks.")
-
-(defun nox-monitor-cursor-change ()
-  (unless (equal (point) nox-last-position)
-    (ignore-errors
-      (posframe-hide nox-doc-name)))
-  (setq nox-last-position (point)))
 
 (defun nox--apply-text-edits (edits &optional version)
   "Apply EDITS for current buffer if at VERSION, or if it's nil."
