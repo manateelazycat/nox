@@ -293,12 +293,6 @@ documentation on what these do.
 - `nox-ignored-server-capabilites`: LSP server capabilities that
   Nox could use, but won't;
 
-- `nox-put-doc-in-help-buffer`: If non-nil, put eldoc docstrings in
-  separate `*nox-help*` buffer;
-
-- `nox-auto-display-help-buffer`: If non-nil, automatically display
-  `*nox-help*` buffer;
-
 - `nox-confirm-server-initiated-edits`: If non-nil, ask for confirmation
   before allowing server to edit the source buffer's text;
 
@@ -332,7 +326,7 @@ If you choose ```mspyls```:
 
 Note mspyls need index file before respond completion request, so please don't test single file under HOME directory, that will cost few minutes to index file, and ```pyls``` haven't this problem.
 
-- `nox-optimization-p': Improve performance by adjust GC limit and disable ```bidi-display-reordering```. If you don't need Nox set this, change this option to nil.
+- `nox-optimization-p`: Improve performance by adjust GC limit and disable ```bidi-display-reordering```. If you don't need Nox set this, change this option to nil.
 
 [lsp]: https://microsoft.github.io/language-server-protocol/
 [rls]: https://github.com/rust-lang-nursery/rls
