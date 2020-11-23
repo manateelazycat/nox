@@ -57,7 +57,7 @@ Note: suggestion upgrade emacs to 27.x or 28.x, JSON parser much faster, and Nox
 
 * Javascript's [javascript-typescript-stdio][javascript-typescript-langserver]
 * Rust's [rls][rls]
-* Python's [mspyls][mspyls] or [pyls][pyls]
+* Python's [mspyls][mspyls], [pyls][pyls] or [pyright][pyright]
 * Ruby's [solargraph][solargraph]
 * Java's [Eclipse JDT Language Server][eclipse-jdt]
 * Bash's [bash-language-server][bash-language-server]
@@ -317,7 +317,7 @@ lisp:
 
 - `nox-omni-sharp-path`: Language server path for OmniSharp, default is ```~/.emacs.d/.cache/omnisharp/server/v1.34.5/OmniSharp.exe```, you can set with other value.
 
-- `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls```.
+- `nox-python-server`: Language server for Python, default is ```mspyls```, you can set with other value: ```pyls``` or ```pyright```.
 
 If you choose ```mspyls```:
 1. Execute command ```nox-print-mspyls-download-url``` get download url of mspyls.
@@ -332,6 +332,7 @@ Note mspyls need index file before respond completion request, so please don't t
 [rls]: https://github.com/rust-lang-nursery/rls
 [pyls]: https://github.com/palantir/python-language-server
 [mspyls]: https://github.com/microsoft/python-language-server
+[pyright]: https://github.com/microsoft/pyright
 [gnuelpa]: https://elpa.gnu.org/packages/eglot.html
 [melpa]: http://melpa.org/#/eglot
 [javascript-typescript-langserver]: https://github.com/sourcegraph/javascript-typescript-langserver

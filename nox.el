@@ -286,7 +286,7 @@ Can set with `intelephense' or `php-language-server'."
 
 (defcustom nox-python-server "mspyls"
   "The default server for Python mode.
-Can set with `pyls' or `mspyls'.
+Can set with `pyls', `mspyls' or `pyright'.
 
 If you choose `mspyls', you need execute command `nox-print-mspyls-download-url' get download url of mspyls.
 Then extract the contents of the file to the directory ~/.emacs.d/nox/mspyls/ ."
@@ -2329,6 +2329,8 @@ influence of C1 on the result."
                                            "Microsoft.Python.LanguageServer")))))
         ((string-equal nox-python-server "pyls")
          (list "pyls"))
+        ((string-equal nox-python-server "pyright")
+         (list "pyright-langserver" "--stdio"))
         ))
 
 ;;; php specific
