@@ -1,3 +1,9 @@
+# NOTE
+Thanks to all users who support Nox, I have develop new LSP client [lsp-bridge](https://github.com/manateelazycat/lsp-bridge) -- the fastest LSP client for Emacs.
+
+The issue and PR of current project will no longer reply, thank you! ;)
+
+
 # Nox
 
 Nox is a LSP client for Emacs, code fork from [eglot](https://github.com/joaotavora/eglot).
